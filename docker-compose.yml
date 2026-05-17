@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------
+  # 1. Database Layer: MySQL 8.0
+  # ---------------------------------------------------------
+  mysql-db:
+    image: mysql:8.0
+    container_name: eva-mysql-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: eva_crm
+      MYSQL_USER: ${DB_USERNAME:-newuser}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-NewPassword123!}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-RootSecuredPassword123!}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - crm-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u$$MYSQL_USER", "-p$$MYSQL_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------
+  # 2. Application Layer: Spring Boot Java 17 Service
+  # ---------------------------------------------------------
+  eva-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: eva-backend-service
+    restart: always
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:mysql://mysql-db:3306/eva_crm?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      DB_USERNAME: ${DB_USERNAME:-newuser}
+      DB_PASSWORD: ${DB_PASSWORD:-NewPassword123!}
+      JWT_SECRET: ${JWT_SECRET:-super-secret-key-replace-this-with-a-real-256bit-base64-encoded-key-in-production-environments-eva-crm-2024}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+    ports:
+      - "8080:8080"
+    volumes:
+      - crm-uploads:/app/uploads
+      - crm-logs:/app/logs
+    networks:
+      - crm-network
+
+  # ---------------------------------------------------------
+  # 3. Client Layer: React served through static Nginx
+  # ---------------------------------------------------------
+  eva-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: eva-frontend-client
+    restart: always
+    depends_on:
+      - eva-backend
+    ports:
+      - "80:80"
+    networks:
+      - crm-network
+
+volumes:
+  mysql-data:
+    driver: local
+  crm-uploads:
+    driver: local
+  crm-logs:
+    driver: local
+
+networks:
+  crm-network:
+    driver: bridge

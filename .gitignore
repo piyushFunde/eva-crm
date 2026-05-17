@@ -1,0 +1,47 @@
+# ==============================================================================
+# EVA CRM ROOT GITIGNORE
+# ==============================================================================
+
+# OS Metadata
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+
+# Dependency & Build Directories
+node_modules/
+target/
+dist/
+**/target/
+**/dist/
+
+# Build and IDE Configurations
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Hardened Security: Environment Secret Files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+**/*.env
+
+# Local Uploaded Media (Payment Receipts & Ingested Files)
+uploads/
+**/uploads/
+logs/
+**/logs/
+
+# Maven/Java Build Temporary Files
+.mvn/
+*.class
+*.log
+*.jar
+*.war

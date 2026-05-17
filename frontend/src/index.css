@@ -1,0 +1,132 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── EVA COLLECTIONS PREMIUM DESIGN SYSTEM ──────── */
+:root {
+  --bg-dark: #0F1923;
+  --bg-card: rgba(255, 255, 255, 0.05);
+  --bg-card-border: rgba(255, 255, 255, 0.08);
+  --accent-teal: #4ECDC4;
+  --accent-teal-dim: rgba(78, 205, 196, 0.12);
+  --accent-teal-border: rgba(78, 205, 196, 0.30);
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(255, 255, 255, 0.60);
+  --text-muted: rgba(255, 255, 255, 0.35);
+  
+  --pending-amber: #F59E0B;
+  --pending-amber-bg: rgba(245, 158, 11, 0.12);
+  --pending-amber-border: rgba(245, 158, 11, 0.25);
+  
+  --collected-green: #22C55E;
+  --collected-green-bg: rgba(34, 197, 94, 0.12);
+  
+  --partial-blue: #60A5FA;
+  --partial-blue-bg: rgba(96, 165, 250, 0.12);
+  
+  --error-red: #EF4444;
+  
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+/* ── Base Resets ────────────────────────────────────────── */
+* {
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, .font-premium {
+  font-family: 'Outfit', sans-serif;
+}
+
+#root {
+  height: 100%;
+  background-color: var(--bg-dark);
+}
+
+/* ── Premium Utilities ────────────────────────────────────── */
+.mesh-bg {
+  background-color: #0F1923;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(78, 205, 196, 0.08) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.08) 0, transparent 50%);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.glass-card-hover:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(78, 205, 196, 0.2);
+  transform: translateY(-2px);
+}
+
+/* ── Inputs (Premium White) ─────────────────────────── */
+.premium-input {
+  background: #F9FAFB;
+  border: 2px solid #F3F4F6;
+  border-radius: 16px;
+  padding: 16px 20px;
+  color: #0F1923;
+  font-size: 15px;
+  font-weight: 600;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.premium-input:focus {
+  background: #fff;
+  border-color: var(--accent-teal);
+  box-shadow: 0 10px 25px -5px rgba(78, 205, 196, 0.1);
+}
+
+/* ── Custom UI Elements ─────────────────────────────── */
+.badge {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.badge-pending { background: rgba(245, 158, 11, 0.1); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.2); }
+.badge-collected { background: rgba(34, 197, 94, 0.1); color: #22C55E; border: 1px solid rgba(34, 197, 94, 0.2); }
+
+.progress-container {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #4ECDC4 0%, #22C55E 100%);
+  box-shadow: 0 0 15px rgba(78, 205, 196, 0.4);
+}
+
+/* ── No Scrollbar ───────────────────────────────────── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

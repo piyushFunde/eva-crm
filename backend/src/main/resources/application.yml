@@ -1,0 +1,8 @@
+spring:
+  profiles:
+    active: dev
+  application:
+    name: eva-crm
+
+server:
+  port: 8080

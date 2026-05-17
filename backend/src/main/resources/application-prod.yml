@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.MySQLDialect
+
+app:
+  allowed-origins: "https://crm.evagroups.in"
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration: 86400000 # 24 hours
+    vapid:
+      public-key: ${VAPID_PUBLIC_KEY}
+      private-key: ${VAPID_PRIVATE_KEY}
+
+# Enable Gzip Compression for JSON responses (Addition 9)
+server:
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,text/css,application/javascript
+    min-response-size: 1024

@@ -1,0 +1,16 @@
+{
+  "name": "eva-crm-parent",
+  "version": "1.0.0",
+  "description": "Root operational manager for EVA CRM Enterprise Stack",
+  "private": true,
+  "scripts": {
+    "build:backend": "cd backend && mvn clean package -DskipTests",
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "build:all": "npm run build:backend && npm run build:frontend",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "start:prod": "docker compose up -d --build",
+    "logs:prod": "docker compose logs -f"
+  }
+}
