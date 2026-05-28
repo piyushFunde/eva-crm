@@ -1,7 +1,7 @@
 # ==============================================================================
 # STAGE 1: BUILD
 # ==============================================================================
-FROM maven:3.8.5-openjdk-17-slim AS builder
+FROM maven:3.9-eclipse-temurin-17-alpine AS builder
 WORKDIR /app
 
 # Copy pom.xml and download dependencies
@@ -15,7 +15,7 @@ RUN mvn package -DskipTests -B
 # ==============================================================================
 # STAGE 2: RUNTIME
 # ==============================================================================
-FROM openjdk:17-slim
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
 # Copy packaged jar from builder
