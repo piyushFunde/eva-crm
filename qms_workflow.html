@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QMS Workflow — Pharmaceutical Manufacturing | AIVOA Context</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --ink: #0c0e1a;
+      --indigo: #3d4ae8;
+      --violet: #7152f3;
+      --green: #15803d;
+      --amber: #b45309;
+      --rose: #e11d48;
+      --sky: #0369a1;
+      --slate-50: #f8f9fc;
+      --slate-100: #f0f2f8;
+      --slate-200: #dde1ef;
+      --slate-400: #8892ac;
+      --slate-500: #5d6880;
+      --white: #fff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #f0f2f8;
+      color: var(--ink);
+      line-height: 1.6;
+    }
+
+    /* ─── COVER ─── */
+    .cover {
+      background: linear-gradient(135deg, #0c0e1a 0%, #1a1d2e 40%, #2f3bc8 100%);
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 4rem 2rem;
+      position: relative; overflow: hidden;
+    }
+    .cover::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(113,82,243,.25) 0%, transparent 70%);
+    }
+    .cover-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+      border-radius: 100px; padding: 6px 18px;
+      font-size: .75rem; font-weight: 700; color: #c4b3ff;
+      letter-spacing: .06em; text-transform: uppercase;
+      margin-bottom: 2rem; position: relative; z-index: 2;
+    }
+    .cover h1 {
+      font-size: clamp(2rem, 5vw, 3.75rem);
+      font-weight: 800; color: #fff;
+      line-height: 1.1; letter-spacing: -.03em;
+      margin-bottom: 1.5rem; position: relative; z-index: 2;
+    }
+    .cover h1 span {
+      background: linear-gradient(135deg, #8f9bff, #c4b3ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .cover-sub {
+      font-size: 1.1rem; color: rgba(255,255,255,.65);
+      max-width: 640px; margin-bottom: 3rem;
+      position: relative; z-index: 2;
+    }
+    .cover-pills {
+      display: flex; flex-wrap: wrap; gap: .75rem;
+      justify-content: center; position: relative; z-index: 2;
+    }
+    .cover-pill {
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+      border-radius: 8px; padding: 8px 16px;
+      font-size: .8rem; font-weight: 600; color: rgba(255,255,255,.8);
+    }
+    .cover-pill strong { color: #c4b3ff; }
+    .grid-overlay {
+      position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    /* ─── SECTIONS ─── */
+    .section { padding: 5rem 2rem; max-width: 1200px; margin: 0 auto; }
+    .section-label {
+      font-size: .72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .15em; color: var(--indigo); margin-bottom: .75rem;
+    }
+    .section-title {
+      font-size: clamp(1.75rem, 3vw, 2.5rem);
+      font-weight: 800; letter-spacing: -.02em; margin-bottom: 1rem;
+    }
+    .section-sub {
+      font-size: 1rem; color: var(--slate-500);
+      max-width: 680px; line-height: 1.7; margin-bottom: 3rem;
+    }
+
+    /* ─── EXAMPLE CARDS ─── */
+    .example-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    .example-card {
+      background: white; border-radius: 20px;
+      border: 1px solid var(--slate-200);
+      padding: 2rem; box-shadow: 0 4px 20px rgba(12,14,26,.06);
+      position: relative; overflow: hidden;
+    }
+    .example-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    }
+    .example-card.api::before { background: linear-gradient(90deg, #3d4ae8, #7152f3); }
+    .example-card.fdf::before { background: linear-gradient(90deg, #15803d, #16a34a); }
+    .card-type {
+      display: inline-block; font-size: .65rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: .1em;
+      padding: 3px 10px; border-radius: 100px; margin-bottom: 1rem;
+    }
+    .api .card-type { background: #eef0ff; color: var(--indigo); }
+    .fdf .card-type { background: #dcfce7; color: var(--green); }
+    .example-card h3 {
+      font-size: 1.4rem; font-weight: 800; margin-bottom: .5rem;
+      letter-spacing: -.02em;
+    }
+    .api h3 { color: var(--indigo); }
+    .fdf h3 { color: var(--green); }
+    .example-card p { font-size: .85rem; color: var(--slate-500); line-height: 1.65; }
+    .meta-row {
+      display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.25rem;
+    }
+    .meta-tag {
+      background: var(--slate-100); border: 1px solid var(--slate-200);
+      border-radius: 6px; padding: 3px 10px;
+      font-size: .72rem; font-weight: 600; color: var(--slate-500);
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* ─── LIFECYCLE BANNER ─── */
+    .lifecycle-wrap { background: white; border-radius: 24px; padding: 2.5rem; margin-bottom: 3rem; box-shadow: 0 4px 20px rgba(12,14,26,.06); border: 1px solid var(--slate-200); }
+    .lifecycle-title { font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; color: var(--slate-400); margin-bottom: 1.5rem; }
+    .lifecycle-flow {
+      display: flex; align-items: center; gap: 0;
+      overflow-x: auto; padding-bottom: .5rem;
+    }
+    .lf-step {
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center; flex: 1; min-width: 90px;
+    }
+    .lf-node {
+      width: 48px; height: 48px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; margin-bottom: .5rem; position: relative;
+    }
+    .lf-label { font-size: .68rem; font-weight: 700; color: var(--ink); line-height: 1.3; }
+    .lf-arrow {
+      width: 40px; height: 2px; background: var(--slate-200);
+      position: relative; flex-shrink: 0; margin-top: -24px;
+    }
+    .lf-arrow::after {
+      content: '▶'; position: absolute; right: -6px; top: -7px;
+      color: var(--slate-400); font-size: .6rem;
+    }
+
+    /* ─── FLOW DIAGRAM ─── */
+    .flow-bg {
+      background: linear-gradient(160deg, #eef0ff 0%, #f3f0ff 60%, var(--slate-50) 100%);
+      padding: 5rem 2rem;
+    }
+    .flow-container { max-width: 1100px; margin: 0 auto; }
+    .phase-block {
+      background: white; border-radius: 20px;
+      border: 1px solid var(--slate-200);
+      box-shadow: 0 4px 24px rgba(12,14,26,.07);
+      margin-bottom: 1.5rem; overflow: hidden;
+    }
+    .phase-header {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 1.25rem 1.75rem;
+      border-bottom: 1px solid var(--slate-100);
+    }
+    .phase-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; flex-shrink: 0;
+    }
+    .phase-header-text { flex: 1; }
+    .phase-num { font-size: .65rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 2px; }
+    .phase-name { font-size: 1.1rem; font-weight: 800; letter-spacing: -.02em; }
+    .phase-tag { font-size: .7rem; font-weight: 700; padding: 3px 10px; border-radius: 100px; }
+    .phase-body { padding: 1.75rem; }
+    .step-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+    .step-card {
+      background: var(--slate-50); border: 1px solid var(--slate-200);
+      border-radius: 12px; padding: 1rem 1.125rem;
+      transition: all .2s;
+    }
+    .step-card:hover { background: #eef0ff; border-color: #bcc3ff; }
+    .step-icon { font-size: 1.2rem; margin-bottom: .5rem; }
+    .step-title { font-size: .85rem; font-weight: 700; color: var(--ink); margin-bottom: .25rem; }
+    .step-desc { font-size: .75rem; color: var(--slate-500); line-height: 1.5; }
+    .step-module {
+      display: inline-block; margin-top: .6rem;
+      padding: 2px 8px; border-radius: 4px;
+      font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+    }
+
+    /* ─── CONNECTOR ARROW ─── */
+    .connector {
+      text-align: center; padding: .75rem 0;
+      color: var(--indigo); font-size: 1.5rem; position: relative;
+    }
+    .connector::before, .connector::after {
+      content: ''; display: inline-block;
+      width: 80px; height: 2px; background: var(--slate-200);
+      vertical-align: middle; margin: 0 .5rem;
+    }
+
+    /* ─── QMS MODULE LEGEND ─── */
+    .modules-section { padding: 5rem 2rem; max-width: 1200px; margin: 0 auto; }
+    .modules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; }
+    .module-card {
+      background: white; border-radius: 16px;
+      border: 1px solid var(--slate-200);
+      padding: 1.5rem; box-shadow: 0 2px 12px rgba(12,14,26,.05);
+    }
+    .module-header { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; }
+    .module-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+    .module-name { font-size: .95rem; font-weight: 800; letter-spacing: -.01em; }
+    .module-trigger { font-size: .72rem; color: var(--slate-400); font-weight: 600; margin-bottom: .75rem; }
+    .module-steps { list-style: none; }
+    .module-steps li {
+      font-size: .78rem; color: var(--slate-500); line-height: 1.6;
+      padding: .3rem 0; border-bottom: 1px solid var(--slate-100);
+      display: flex; gap: .5rem; align-items: flex-start;
+    }
+    .module-steps li:last-child { border-bottom: none; }
+    .check { color: #22c55e; font-weight: 800; flex-shrink: 0; }
+
+    /* ─── SCENARIO BOX ─── */
+    .scenario-section { background: var(--ink); padding: 5rem 2rem; }
+    .scenario-inner { max-width: 1100px; margin: 0 auto; }
+    .scenario-title { font-size: clamp(1.5rem, 3vw, 2.25rem); font-weight: 800; color: white; letter-spacing: -.02em; margin-bottom: .75rem; }
+    .scenario-sub { color: rgba(255,255,255,.55); font-size: .95rem; margin-bottom: 3rem; }
+    .scenario-timeline { position: relative; }
+    .scenario-timeline::before {
+      content: ''; position: absolute; left: 24px; top: 0; bottom: 0;
+      width: 2px; background: linear-gradient(180deg, #3d4ae8, #7152f3, #22c55e);
+    }
+    .timeline-item {
+      display: flex; gap: 1.5rem; margin-bottom: 2rem; position: relative;
+    }
+    .tl-dot {
+      width: 50px; height: 50px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; font-weight: 800; color: white;
+      flex-shrink: 0; z-index: 2; border: 3px solid var(--ink);
+    }
+    .tl-content {
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 16px; padding: 1.25rem 1.5rem; flex: 1;
+    }
+    .tl-phase { font-size: .62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; margin-bottom: .3rem; }
+    .tl-title { font-size: 1rem; font-weight: 700; color: white; margin-bottom: .4rem; }
+    .tl-text { font-size: .8rem; color: rgba(255,255,255,.6); line-height: 1.6; }
+    .tl-module-tag {
+      display: inline-block; margin-top: .75rem;
+      padding: 3px 10px; border-radius: 6px;
+      font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+    }
+    .alert-box {
+      background: rgba(225, 29, 72, .12); border: 1px solid rgba(225,29,72,.3);
+      border-radius: 12px; padding: 1rem 1.25rem; margin-top: .75rem;
+      display: flex; gap: .75rem; align-items: flex-start;
+    }
+    .alert-box .icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+    .alert-box p { font-size: .78rem; color: #fca5a5; line-height: 1.5; }
+    .success-box {
+      background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.25);
+      border-radius: 12px; padding: 1rem 1.25rem; margin-top: .75rem;
+      display: flex; gap: .75rem; align-items: flex-start;
+    }
+    .success-box p { font-size: .78rem; color: #86efac; line-height: 1.5; }
+
+    /* ─── SUMMARY TABLE ─── */
+    .table-section { padding: 5rem 2rem; max-width: 1200px; margin: 0 auto; }
+    .table-wrap { overflow-x: auto; border-radius: 16px; border: 1px solid var(--slate-200); box-shadow: 0 4px 20px rgba(12,14,26,.06); }
+    table { width: 100%; border-collapse: collapse; background: white; min-width: 700px; }
+    thead tr { background: var(--slate-50); }
+    th { padding: 1rem 1.25rem; text-align: left; font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--slate-400); border-bottom: 1px solid var(--slate-200); }
+    td { padding: .875rem 1.25rem; font-size: .83rem; color: var(--slate-500); border-bottom: 1px solid var(--slate-100); vertical-align: top; line-height: 1.5; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--slate-50); }
+    .td-module { font-weight: 700; color: var(--ink); }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+    .badge-indigo { background: #eef0ff; color: var(--indigo); }
+    .badge-green { background: #dcfce7; color: var(--green); }
+    .badge-rose { background: #ffe4e6; color: var(--rose); }
+    .badge-amber { background: #fef3c7; color: var(--amber); }
+    .badge-sky { background: #e0f2fe; color: var(--sky); }
+    .badge-violet { background: #ede9fe; color: var(--violet); }
+
+    /* ─── FOOTER ─── */
+    .page-footer {
+      background: var(--ink); color: rgba(255,255,255,.5);
+      text-align: center; padding: 2.5rem 2rem;
+      font-size: .8rem;
+    }
+    .page-footer strong { color: rgba(255,255,255,.8); }
+
+    /* ─── COLORS PER PHASE ─── */
+    .ph-rmqc  .phase-icon { background: #eef0ff; }
+    .ph-api   .phase-icon { background: #ede9fe; }
+    .ph-fdf   .phase-icon { background: #dcfce7; }
+    .ph-dev   .phase-icon { background: #ffe4e6; }
+    .ph-capa  .phase-icon { background: #fef3c7; }
+    .ph-rel   .phase-icon { background: #e0f2fe; }
+    .ph-pms   .phase-icon { background: #f3e8ff; }
+
+    .ph-rmqc  .phase-num  { color: var(--indigo); }
+    .ph-api   .phase-num  { color: var(--violet); }
+    .ph-fdf   .phase-num  { color: var(--green); }
+    .ph-dev   .phase-num  { color: var(--rose); }
+    .ph-capa  .phase-num  { color: var(--amber); }
+    .ph-rel   .phase-num  { color: var(--sky); }
+    .ph-pms   .phase-num  { color: #9333ea; }
+
+    .ph-rmqc  .phase-name { color: var(--indigo); }
+    .ph-api   .phase-name { color: var(--violet); }
+    .ph-fdf   .phase-name { color: var(--green); }
+    .ph-dev   .phase-name { color: var(--rose); }
+    .ph-capa  .phase-name { color: var(--amber); }
+    .ph-rel   .phase-name { color: var(--sky); }
+    .ph-pms   .phase-name { color: #9333ea; }
+
+    .ph-rmqc .phase-tag { background: #eef0ff; color: var(--indigo); }
+    .ph-api  .phase-tag { background: #ede9fe; color: var(--violet); }
+    .ph-fdf  .phase-tag { background: #dcfce7; color: var(--green); }
+    .ph-dev  .phase-tag { background: #ffe4e6; color: var(--rose); }
+    .ph-capa .phase-tag { background: #fef3c7; color: var(--amber); }
+    .ph-rel  .phase-tag { background: #e0f2fe; color: var(--sky); }
+    .ph-pms  .phase-tag { background: #f3e8ff; color: #9333ea; }
+
+    /* module color tags */
+    .tag-sop    { background: #eef0ff; color: var(--indigo); }
+    .tag-dev    { background: #ffe4e6; color: var(--rose); }
+    .tag-capa   { background: #fef3c7; color: var(--amber); }
+    .tag-qc     { background: #dcfce7; color: var(--green); }
+    .tag-doc    { background: #e0f2fe; color: var(--sky); }
+    .tag-train  { background: #ede9fe; color: var(--violet); }
+    .tag-change { background: #f3e8ff; color: #9333ea; }
+    .tag-recall { background: #fef9c3; color: #92400e; }
+
+    @media(max-width:700px) {
+      .example-grid { grid-template-columns: 1fr; }
+      .lifecycle-flow { gap: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════ COVER PAGE ══════════════════════ -->
+<div class="cover">
+  <div class="grid-overlay"></div>
+  <div class="cover-badge">📋 QA Assessment — Section 2</div>
+  <h1>QMS Workflow in<br><span>Pharmaceutical Manufacturing</span></h1>
+  <p class="cover-sub">
+    A real-world walkthrough of how a pharmaceutical manufacturer uses Quality Management System
+    modules — Deviations, CAPA, Quality Checks, Batch Release & Recalls — during the lifecycle
+    of an API and its finished dosage form.
+  </p>
+  <div class="cover-pills">
+    <div class="cover-pill">🧪 <strong>API:</strong> Metformin Hydrochloride</div>
+    <div class="cover-pill">💊 <strong>FDF:</strong> Metformin HCl 500mg ER Tablets</div>
+    <div class="cover-pill">🏭 <strong>Regulation:</strong> 21 CFR Parts 210 & 211</div>
+    <div class="cover-pill">📐 <strong>Guideline:</strong> ICH Q10 Pharmaceutical QMS</div>
+    <div class="cover-pill">🤖 <strong>Platform:</strong> AIVOA.QMS.AI Context</div>
+  </div>
+</div>
+
+<!-- ══════════════════════ PRODUCT INTRO ══════════════════════ -->
+<div class="section">
+  <div class="section-label">Step 0 — Product Selection</div>
+  <h2 class="section-title">Our Real-World Example Products</h2>
+  <p class="section-sub">
+    We chose <strong>Metformin HCl</strong> — one of the world's most prescribed diabetes medications — because its
+    manufacturing process is well-documented, regulated, and touches nearly every QMS module
+    from raw material intake to post-market surveillance.
+  </p>
+
+  <div class="example-grid">
+    <!-- API Card -->
+    <div class="example-card api">
+      <span class="card-type">Active Pharmaceutical Ingredient (API)</span>
+      <h3>Metformin Hydrochloride</h3>
+      <p>
+        A biguanide compound synthesized via chemical reaction of dimethylamine and 2-cyanoguanidine.
+        Used globally as a first-line treatment for Type 2 Diabetes Mellitus. Manufactured under
+        strict GMP conditions with multiple in-process controls.
+      </p>
+      <div class="meta-row">
+        <span class="meta-tag">CAS: 1115-70-4</span>
+        <span class="meta-tag">MW: 165.62 g/mol</span>
+        <span class="meta-tag">Synthesis: Chemical</span>
+        <span class="meta-tag">ICH Q7 (API GMP)</span>
+        <span class="meta-tag">USP Monograph</span>
+      </div>
+    </div>
+
+    <!-- FDF Card -->
+    <div class="example-card fdf">
+      <span class="card-type">Finished Dosage Form (FDF)</span>
+      <h3>Metformin HCl 500mg ER Tablets</h3>
+      <p>
+        Extended-release oral tablet formulated with Hydroxypropyl Methylcellulose (HPMC) matrix.
+        Provides controlled drug release over 8–12 hours. Branded equivalent to Glucophage XR.
+        Each batch = 500,000 tablets. Packaged in 60-count HDPE bottles.
+      </p>
+      <div class="meta-row">
+        <span class="meta-tag">Dose: 500mg</span>
+        <span class="meta-tag">Release: Extended (ER)</span>
+        <span class="meta-tag">Route: Oral</span>
+        <span class="meta-tag">ICH Q8/Q9/Q10</span>
+        <span class="meta-tag">21 CFR 314</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lifecycle Banner -->
+  <div class="lifecycle-wrap">
+    <div class="lifecycle-title">📍 Complete Manufacturing Lifecycle Overview</div>
+    <div class="lifecycle-flow">
+      <div class="lf-step">
+        <div class="lf-node" style="background:#eef0ff">🧾</div>
+        <div class="lf-label">Raw Material<br>Sourcing</div>
+      </div>
+      <div class="lf-arrow"></div>
+      <div class="lf-step">
+        <div class="lf-node" style="background:#eef0ff">🔬</div>
+        <div class="lf-label">RM Quality<br>Testing</div>
+      </div>
+      <div class="lf-arrow"></div>
+      <div class="lf-step">
+        <div class="lf-node" style="background:#ede9fe">⚗️</div>
+        <div class="lf-label">API<br>Synthesis</div>
+      </div>
+      <div class="lf-arrow"></div>
+      <div class="lf-step">
+        <div class="lf-node" style="background:#ede9fe">📊</div>
+        <div class="lf-label">API QC<br>Testing</div>
+      </div>
+      <div class="lf-arrow"></div>
+      <div class="lf-step">
+        <div class="lf-node" style="background:#dcfce7">🏭</div>
+        <div class="lf-label">FDF<br>Manufacturing</div>
+      </div>
+      <div class="lf-arrow"></div>
+      <div class="lf-step">
+        <div class="lf-node" style="background:#dcfce7">✅</div>
+        <div class="lf-label">Batch<br>Release</div>
+      </div>
+      <div class="lf-arrow"></div>
+      <div class="lf-step">
+        <div class="lf-node" style="background:#e0f2fe">📦</div>
+        <div class="lf-label">Distribution<br>& Market</div>
+      </div>
+      <div class="lf-arrow"></div>
+      <div class="lf-step">
+        <div class="lf-node" style="background:#f3e8ff">📡</div>
+        <div class="lf-label">Post-Market<br>Surveillance</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ PHASE-BY-PHASE FLOW ══════════════════════ -->
+<div class="flow-bg">
+  <div class="flow-container">
+    <div style="text-align:center; margin-bottom: 3rem;">
+      <div class="section-label" style="text-align:center">QMS Module Mapping</div>
+      <h2 class="section-title">Phase-by-Phase QMS Workflow</h2>
+      <p class="section-sub" style="margin:0 auto; text-align:center">
+        Each manufacturing phase triggers specific QMS modules. Below is the complete workflow
+        showing what happens, when, and which QMS module is activated.
+      </p>
+    </div>
+
+    <!-- PHASE 1 -->
+    <div class="phase-block ph-rmqc">
+      <div class="phase-header">
+        <div class="phase-icon">🧾</div>
+        <div class="phase-header-text">
+          <div class="phase-num">Phase 1</div>
+          <div class="phase-name">Raw Material Receipt & Quality Control</div>
+        </div>
+        <span class="phase-tag">Incoming QC</span>
+      </div>
+      <div class="phase-body">
+        <p style="font-size:.85rem;color:var(--slate-500);margin-bottom:1.25rem;line-height:1.65">
+          Before any manufacturing begins, all incoming raw materials — including Dimethylamine,
+          2-Cyanoguanidine (for API) and HPMC, Magnesium Stearate (for FDF) — must pass
+          incoming quality control. The warehouse is on <strong>quarantine hold</strong> until QC approves.
+        </p>
+        <div class="step-grid">
+          <div class="step-card">
+            <div class="step-icon">📋</div>
+            <div class="step-title">CoA Review</div>
+            <div class="step-desc">Certificate of Analysis from supplier verified against approved specifications for identity, purity, assay.</div>
+            <span class="step-module tag-doc">Document Control</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">🔬</div>
+            <div class="step-title">Identity Testing (IR/HPLC)</div>
+            <div class="step-desc">Infrared spectroscopy confirms material identity. HPLC checks purity ≥99.5% for Dimethylamine.</div>
+            <span class="step-module tag-qc">QC Lab</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">⚠️</div>
+            <div class="step-title">Out-of-Spec (OOS) Alert</div>
+            <div class="step-desc">If moisture content of HPMC exceeds 5% — OOS triggered. Material rejected. Deviation opened automatically.</div>
+            <span class="step-module tag-dev">Deviation</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">✅</div>
+            <div class="step-title">Material Approval</div>
+            <div class="step-desc">QC Analyst approves via electronic signature. System releases quarantine. Material status → "Approved".</div>
+            <span class="step-module tag-doc">21 CFR Part 11</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector">⬇️</div>
+
+    <!-- PHASE 2 -->
+    <div class="phase-block ph-api">
+      <div class="phase-header">
+        <div class="phase-icon">⚗️</div>
+        <div class="phase-header-text">
+          <div class="phase-num">Phase 2</div>
+          <div class="phase-name">API Manufacturing — Metformin HCl Synthesis</div>
+        </div>
+        <span class="phase-tag">GMP Production</span>
+      </div>
+      <div class="phase-body">
+        <p style="font-size:.85rem;color:var(--slate-500);margin-bottom:1.25rem;line-height:1.65">
+          Metformin HCl is synthesized via condensation reaction of Dimethylamine + 2-Cyanoguanidine
+          under controlled temperature (130–150°C) and pressure. The process has
+          <strong>4 critical control points</strong> monitored by in-process QC.
+        </p>
+        <div class="step-grid">
+          <div class="step-card">
+            <div class="step-icon">📄</div>
+            <div class="step-title">Batch Manufacturing Record</div>
+            <div class="step-desc">Electronic BMR issued from template. Each step requires operator sign-off + timestamp per 21 CFR 211.188.</div>
+            <span class="step-module tag-doc">Document Control</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">🌡️</div>
+            <div class="step-title">In-Process Controls (IPC)</div>
+            <div class="step-desc">Reaction pH monitored every 30 min. Yield check at intermediate stage. Particle size post-milling: 10–50μm.</div>
+            <span class="step-module tag-qc">QC / IPC</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">🚨</div>
+            <div class="step-title">Equipment Alarm — Reactor</div>
+            <div class="step-desc">Temperature spike to 165°C (limit: 155°C). Equipment deviation raised. Production paused. Investigation begins.</div>
+            <span class="step-module tag-dev">Deviation</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">👨‍🔬</div>
+            <div class="step-title">API Characterization</div>
+            <div class="step-desc">Final API tested: Assay, Heavy Metals, Residual Solvents (ICH Q3C), Microbial Limits. All vs. USP spec.</div>
+            <span class="step-module tag-qc">QC Lab</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector">⬇️</div>
+
+    <!-- DEVIATION BOX -->
+    <div class="phase-block ph-dev">
+      <div class="phase-header">
+        <div class="phase-icon">🚨</div>
+        <div class="phase-header-text">
+          <div class="phase-num">QMS Module Triggered</div>
+          <div class="phase-name">Deviation Management — Reactor Temperature Excursion</div>
+        </div>
+        <span class="phase-tag">Critical Deviation</span>
+      </div>
+      <div class="phase-body">
+        <p style="font-size:.85rem;color:var(--slate-500);margin-bottom:1.25rem;line-height:1.65">
+          <strong>Real Scenario:</strong> During Batch MFM-2024-0047, Reactor R-03 temperature reached 165°C
+          (limit: 155°C) for 12 minutes. Automatic deviation triggered in QMS.
+        </p>
+        <div class="step-grid">
+          <div class="step-card">
+            <div class="step-icon">📝</div>
+            <div class="step-title">1. Deviation Report Opened</div>
+            <div class="step-desc">Operator logs event within 30 min. Classification: Critical (potential impact on product quality). Batch placed on hold.</div>
+            <span class="step-module tag-dev">Deviation Module</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">🔍</div>
+            <div class="step-title">2. Root Cause Investigation</div>
+            <div class="step-desc">5-Whys & Fishbone analysis. Root cause: Faulty thermocouple sensor. Secondary: Calibration schedule missed.</div>
+            <span class="step-module tag-dev">Deviation Module</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">🧪</div>
+            <div class="step-title">3. Impact Assessment</div>
+            <div class="step-desc">API assay tested: 99.7% (pass). Impurity profile unchanged. QA concludes: Batch MFM-2024-0047 acceptable with justification.</div>
+            <span class="step-module tag-qc">QC + QA Review</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">📊</div>
+            <div class="step-title">4. CAPA Initiated</div>
+            <div class="step-desc">Deviation escalated to CAPA because root cause is systemic (calibration schedule). Corrective action required within 30 days.</div>
+            <span class="step-module tag-capa">CAPA Triggered</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector">⬇️</div>
+
+    <!-- CAPA BOX -->
+    <div class="phase-block ph-capa">
+      <div class="phase-header">
+        <div class="phase-icon">🔧</div>
+        <div class="phase-header-text">
+          <div class="phase-num">QMS Module Triggered</div>
+          <div class="phase-name">CAPA — Corrective & Preventive Action</div>
+        </div>
+        <span class="phase-tag">Systemic Fix</span>
+      </div>
+      <div class="phase-body">
+        <p style="font-size:.85rem;color:var(--slate-500);margin-bottom:1.25rem;line-height:1.65">
+          Since the thermocouple calibration miss is systemic (could affect all reactors), a formal
+          CAPA is raised to fix the root cause and prevent recurrence across all production equipment.
+        </p>
+        <div class="step-grid">
+          <div class="step-card">
+            <div class="step-icon">🛠️</div>
+            <div class="step-title">Corrective Action</div>
+            <div class="step-desc">Replace thermocouple on Reactor R-03. Emergency calibration of all 6 reactors. Calibration certificates updated in QMS.</div>
+            <span class="step-module tag-capa">CAPA</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">🔒</div>
+            <div class="step-title">Preventive Action</div>
+            <div class="step-desc">Calibration frequency changed from 6-monthly to quarterly. Automated QMS reminder set. Checklist updated in SOP-MAINT-042.</div>
+            <span class="step-module tag-capa">CAPA + Change Control</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">🎓</div>
+            <div class="step-title">Training Requirement</div>
+            <div class="step-desc">All maintenance technicians re-trained on calibration SOP. Training records captured in QMS. Competency assessment completed.</div>
+            <span class="step-module tag-train">Training Module</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">✔️</div>
+            <div class="step-title">CAPA Effectiveness Check</div>
+            <div class="step-desc">After 90 days: zero calibration overruns detected across all reactors. CAPA marked "Effective" and closed.</div>
+            <span class="step-module tag-capa">CAPA Closure</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector">⬇️</div>
+
+    <!-- PHASE 3 -->
+    <div class="phase-block ph-fdf">
+      <div class="phase-header">
+        <div class="phase-icon">💊</div>
+        <div class="phase-header-text">
+          <div class="phase-num">Phase 3</div>
+          <div class="phase-name">FDF Manufacturing — Metformin 500mg ER Tablets</div>
+        </div>
+        <span class="phase-tag">Tablet Production</span>
+      </div>
+      <div class="phase-body">
+        <p style="font-size:.85rem;color:var(--slate-500);margin-bottom:1.25rem;line-height:1.65">
+          Approved Metformin HCl API is transferred to the FDF facility. The tableting process
+          involves granulation → drying → blending → compression → coating → packaging.
+          Each step requires IPC and operator verification.
+        </p>
+        <div class="step-grid">
+          <div class="step-card">
+            <div class="step-icon">🌀</div>
+            <div class="step-title">Wet Granulation</div>
+            <div class="step-desc">API + HPMC granulated with purified water. IPC: LOD moisture 1.5–2.5%. Granule size distribution checked.</div>
+            <span class="step-module tag-qc">IPC Monitoring</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">⚡</div>
+            <div class="step-title">Compression</div>
+            <div class="step-desc">Tablet press set to 500mg ± 2% weight. IPC every 15 min: hardness 8–12 kP, friability &lt;1%, thickness 4.5mm.</div>
+            <span class="step-module tag-qc">IPC / QC</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">🎨</div>
+            <div class="step-title">Film Coating</div>
+            <div class="step-desc">Opadry white coating applied. IPC: weight gain 2–3%. Visual inspection: no defects, uniform color, no twin tablets.</div>
+            <span class="step-module tag-qc">Visual QC</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">📦</div>
+            <div class="step-title">Packaging & Labelling</div>
+            <div class="step-desc">HDPE 60-count bottles. Label reconciliation 99.9%. Batch number / expiry date verified. Line clearance documented.</div>
+            <span class="step-module tag-doc">BMR + Reconciliation</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector">⬇️</div>
+
+    <!-- PHASE 4 - BATCH RELEASE -->
+    <div class="phase-block ph-rel">
+      <div class="phase-header">
+        <div class="phase-icon">✅</div>
+        <div class="phase-header-text">
+          <div class="phase-num">Phase 4</div>
+          <div class="phase-name">Quality Review & Batch Release</div>
+        </div>
+        <span class="phase-tag">Final QA Gate</span>
+      </div>
+      <div class="phase-body">
+        <p style="font-size:.85rem;color:var(--slate-500);margin-bottom:1.25rem;line-height:1.65">
+          The Qualified Person (QP) performs final Batch Record Review. All deviations, OOS events,
+          and CAPA actions are reviewed. Only after complete review does the QP provide
+          <strong>electronic batch certification</strong> for market release.
+        </p>
+        <div class="step-grid">
+          <div class="step-card">
+            <div class="step-icon">📑</div>
+            <div class="step-title">Batch Record Review</div>
+            <div class="step-desc">QA reviews 100% of BMR entries. Verifies: all IPCs passed, all deviations closed or justified, no open CAPAs.</div>
+            <span class="step-module tag-doc">Batch Record</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">🧫</div>
+            <div class="step-title">Finished Product QC</div>
+            <div class="step-desc">Dissolution (Q=80% at 8h), Assay (98–102%), Content Uniformity (AV≤15), Microbial (<100 CFU/g) — all per USP.</div>
+            <span class="step-module tag-qc">Final Release Testing</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">🔏</div>
+            <div class="step-title">QP Certification</div>
+            <div class="step-desc">Qualified Person signs batch electronically. 21 CFR Part 11 audit trail generated. Batch status → "Released".</div>
+            <span class="step-module tag-doc">21 CFR Part 11</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">📊</div>
+            <div class="step-title">Stability Sample Retained</div>
+            <div class="step-desc">Retention samples stored at 25°C/60%RH and 40°C/75%RH per ICH Q1A. QMS schedules stability pulls at 3, 6, 9, 12, 24 months.</div>
+            <span class="step-module tag-doc">Stability Module</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector">⬇️</div>
+
+    <!-- PHASE 5 - POST MARKET -->
+    <div class="phase-block ph-pms">
+      <div class="phase-header">
+        <div class="phase-icon">📡</div>
+        <div class="phase-header-text">
+          <div class="phase-num">Phase 5</div>
+          <div class="phase-name">Post-Market Surveillance & Recall Management</div>
+        </div>
+        <span class="phase-tag">Market Safety</span>
+      </div>
+      <div class="phase-body">
+        <p style="font-size:.85rem;color:var(--slate-500);margin-bottom:1.25rem;line-height:1.65">
+          After distribution, the QMS continues to monitor product quality through complaint
+          handling, stability results, and regulatory signals. <strong>Scenario:</strong> 6 months post-release,
+          a complaint arrives about tablets sticking together in the bottle (twin tablets).
+        </p>
+        <div class="step-grid">
+          <div class="step-card">
+            <div class="step-icon">📞</div>
+            <div class="step-title">Customer Complaint Logged</div>
+            <div class="step-desc">Pharmacist reports fused tablets from Batch MFM-FDF-2024-0047. Complaint recorded. QMS assigns Complaint #C-2024-0312.</div>
+            <span class="step-module tag-dev">Complaint Module</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">🔍</div>
+            <div class="step-title">Investigation Opened</div>
+            <div class="step-desc">Retained sample inspected: 0.12% twin tablets found (limit: 0%). IPC coating log reviewed — brief humidity excursion noted.</div>
+            <span class="step-module tag-dev">Deviation Investigation</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">🚨</div>
+            <div class="step-title">Recall Decision</div>
+            <div class="step-desc">Risk assessment: Class III recall (unlikely to cause adverse health consequences but violates GMP). FDA notified within 3 days per 21 CFR 7.</div>
+            <span class="step-module tag-recall">Recall Management</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon">🔁</div>
+            <div class="step-title">CAPA & Process Improvement</div>
+            <div class="step-desc">Coating room humidity control upgraded. SOP updated. New IPC limit added: humidity &lt;45%RH during coating. Re-validation performed.</div>
+            <span class="step-module tag-capa">CAPA + Change Control</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ REAL SCENARIO TIMELINE ══════════════════════ -->
+<div class="scenario-section">
+  <div class="scenario-inner">
+    <div style="text-align:center; margin-bottom:3rem;">
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:#8b6fff;margin-bottom:.5rem">Narrative Walkthrough</div>
+      <div class="scenario-title">Day-by-Day QMS Timeline</div>
+      <div class="scenario-sub">Batch MFM-FDF-2024-0047 — From RM Receipt to Market & Recall</div>
+    </div>
+
+    <div class="scenario-timeline">
+
+      <div class="timeline-item">
+        <div class="tl-dot" style="background:#3d4ae8">D1</div>
+        <div class="tl-content">
+          <div class="tl-phase" style="color:#8f9bff">Day 1 — Raw Material Receipt</div>
+          <div class="tl-title">HPMC Lot HM-2024-891 arrives from supplier</div>
+          <div class="tl-text">3 drums (750 kg) received. Quarantine label applied. CoA checked — moisture 4.8% (limit: ≤5%). QC sampling initiated. Identity IR test: PASS. QMS status updated: "Under Testing".</div>
+          <span class="tl-module-tag" style="background:#eef0ff;color:#3d4ae8">📋 Incoming QC Module</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-dot" style="background:#7152f3">D3</div>
+        <div class="tl-content">
+          <div class="tl-phase" style="color:#c4b3ff">Day 3 — API Synthesis</div>
+          <div class="tl-title">Batch MFM-2024-0047 synthesis begins in Reactor R-03</div>
+          <div class="tl-text">BMR issued electronically. Reaction initiated at 08:00. Temperature monitoring active. Yield at intermediate stage: 94.2% (spec: ≥92%). All IPC checks logged by operator with timestamps.</div>
+          <div class="alert-box">
+            <span class="icon">⚠️</span>
+            <p><strong>10:45 AM:</strong> Temperature alarm — R-03 reaches 165°C (limit: 155°C). Operator stops feed. Production supervisor notified. <strong>Deviation DEV-2024-0091 automatically opened by QMS.</strong> Batch placed on hold.</p>
+          </div>
+          <span class="tl-module-tag" style="background:#ffe4e6;color:#e11d48">🚨 Deviation Module Activated</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-dot" style="background:#e11d48">D4</div>
+        <div class="tl-content">
+          <div class="tl-phase" style="color:#fca5a5">Day 4 — Deviation Investigation</div>
+          <div class="tl-title">Root Cause Analysis — Thermocouple Failure</div>
+          <div class="tl-text">QA team investigates. 5-Whys conducted. Root cause: Thermocouple TC-R03-02 was last calibrated 8 months ago (schedule: 6-monthly). Calibration record missed in paper system. Impact assessment: API assay 99.7% — within spec.</div>
+          <div class="success-box">
+            <span class="icon">✅</span>
+            <p>QA Conclusion: Batch MFM-2024-0047 acceptable with documented justification. Deviation closed with CAPA escalation. <strong>CAPA-2024-0047 opened — systemic calibration gap.</strong></p>
+          </div>
+          <span class="tl-module-tag" style="background:#fef3c7;color:#b45309">🔧 CAPA Module Opened</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-dot" style="background:#b45309">D7</div>
+        <div class="tl-content">
+          <div class="tl-phase" style="color:#fde68a">Day 7 — FDF Manufacturing Begins</div>
+          <div class="tl-title">Tablet Production — Batch MFM-FDF-2024-0047</div>
+          <div class="tl-text">Approved Metformin HCl API transferred to FDF suite. Granulation completed. Moisture LOD 2.1% (spec: 1.5–2.5%). Compression begins — IPC every 15 min: weight 501mg, hardness 9.8kP, friability 0.4%. Coating step: ambient humidity 43%RH.</div>
+          <span class="tl-module-tag" style="background:#dcfce7;color:#15803d">💊 Production + IPC</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-dot" style="background:#0369a1">D14</div>
+        <div class="tl-content">
+          <div class="tl-phase" style="color:#7dd3fc">Day 14 — Batch Release</div>
+          <div class="tl-title">QP Certification — Batch Released to Market</div>
+          <div class="tl-text">All QC tests passed. BMR reviewed: 2 minor deviations (both closed). Dissolution Q=83% at 8h (spec: ≥80%). Assay 100.2%. QP signs electronically. Audit trail generated. 500,000 tablets released. Stability samples stored.</div>
+          <span class="tl-module-tag" style="background:#e0f2fe;color:#0369a1">✅ Batch Release — 21 CFR Part 11</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-dot" style="background:#e11d48">M6</div>
+        <div class="tl-content">
+          <div class="tl-phase" style="color:#fca5a5">Month 6 — Market Complaint</div>
+          <div class="tl-title">Twin Tablets Reported — Recall Initiated</div>
+          <div class="tl-text">Pharmacist calls: "Multiple tablets fused together in Bottle #4482 from Batch MFM-FDF-2024-0047." Complaint #C-2024-0312 opened. Retained sample checked: 0.12% twin tablets found. Coating humidity log reviewed — brief spike to 51%RH during run.</div>
+          <div class="alert-box">
+            <span class="icon">🚨</span>
+            <p><strong>Recall Decision:</strong> Risk assessment → Class III recall. Unlikely to cause harm but GMP non-compliance. Distribution records pulled from QMS. 23 retail pharmacies notified. FDA 7-day notification submitted. CAPA-2024-0089 opened for coating process.</p>
+          </div>
+          <span class="tl-module-tag" style="background:#fef9c3;color:#92400e">📣 Recall Management Module</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-dot" style="background:#15803d">M9</div>
+        <div class="tl-content">
+          <div class="tl-phase" style="color:#86efac">Month 9 — CAPA Closure & Process Improvement</div>
+          <div class="tl-title">All CAPAs Closed — Process Strengthened</div>
+          <div class="tl-text">CAPA-2024-0047 (thermocouple): All 6 reactors recalibrated quarterly. Zero overruns in 6-month effectiveness check. ✅ CLOSED. CAPA-2024-0089 (coating humidity): HVAC upgrade installed, new IPC limit of ≤45%RH enforced, SOP updated, staff retrained. ✅ CLOSED.</div>
+          <div class="success-box">
+            <span class="icon">🎉</span>
+            <p>Next batch (MFM-FDF-2024-0098) manufactured with improved controls. Zero twin tablets in 3 consecutive validation batches. Process validated. FDA inspection passed. Annual Product Review updated.</p>
+          </div>
+          <span class="tl-module-tag" style="background:#dcfce7;color:#15803d">🏆 Quality System Strengthened</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ QMS MODULE GLOSSARY ══════════════════════ -->
+<div class="modules-section">
+  <div class="section-label">QMS Module Reference</div>
+  <h2 class="section-title">Key QMS Modules Used in This Workflow</h2>
+  <p class="section-sub">Each module in a QMS like AIVOA handles a specific quality event. Here's what each one does in the pharma context.</p>
+
+  <div class="modules-grid">
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon" style="background:#ffe4e6; color:#e11d48">🚨</div>
+        <div class="module-name">Deviation Management</div>
+      </div>
+      <div class="module-trigger">Triggered: Any unplanned event departing from SOP/spec</div>
+      <ul class="module-steps">
+        <li><span class="check">→</span>Event detected & reported within 24h</li>
+        <li><span class="check">→</span>Classification: Minor / Major / Critical</li>
+        <li><span class="check">→</span>Impact assessment on batch/product</li>
+        <li><span class="check">→</span>Root cause investigation (5-Whys, Fishbone)</li>
+        <li><span class="check">→</span>Disposition: Accept / Reject / Rework</li>
+        <li><span class="check">→</span>Escalate to CAPA if systemic</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon" style="background:#fef3c7; color:#b45309">🔧</div>
+        <div class="module-name">CAPA</div>
+      </div>
+      <div class="module-trigger">Triggered: Systemic issues, audit findings, recurring deviations</div>
+      <ul class="module-steps">
+        <li><span class="check">→</span>CAPA initiation with due date</li>
+        <li><span class="check">→</span>Corrective action (fix the immediate problem)</li>
+        <li><span class="check">→</span>Preventive action (stop recurrence)</li>
+        <li><span class="check">→</span>Implementation with evidence</li>
+        <li><span class="check">→</span>Effectiveness check after 60–90 days</li>
+        <li><span class="check">→</span>CAPA closure with QA sign-off</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon" style="background:#dcfce7; color:#15803d">🔬</div>
+        <div class="module-name">QC Lab Management</div>
+      </div>
+      <div class="module-trigger">Triggered: Every incoming RM, in-process, and finished product test</div>
+      <ul class="module-steps">
+        <li><span class="check">→</span>Sample receipt and logging</li>
+        <li><span class="check">→</span>Test assignment to analyst</li>
+        <li><span class="check">→</span>Results entry with audit trail</li>
+        <li><span class="check">→</span>OOS/OOT investigation workflow</li>
+        <li><span class="check">→</span>Second analyst verification</li>
+        <li><span class="check">→</span>QA approval for release</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon" style="background:#e0f2fe; color:#0369a1">📋</div>
+        <div class="module-name">Document Control</div>
+      </div>
+      <div class="module-trigger">Triggered: Any SOP creation, update, or BMR issuance</div>
+      <ul class="module-steps">
+        <li><span class="check">→</span>Document creation with version control</li>
+        <li><span class="check">→</span>Review & approval workflow</li>
+        <li><span class="check">→</span>Periodic review scheduling</li>
+        <li><span class="check">→</span>Obsolete document archival</li>
+        <li><span class="check">→</span>BMR issuance from master template</li>
+        <li><span class="check">→</span>21 CFR Part 11 electronic signatures</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon" style="background:#fef9c3; color:#92400e">📣</div>
+        <div class="module-name">Recall Management</div>
+      </div>
+      <div class="module-trigger">Triggered: Safety signals, market complaints, regulatory alerts</div>
+      <ul class="module-steps">
+        <li><span class="check">→</span>Recall classification (Class I/II/III)</li>
+        <li><span class="check">→</span>Distribution traceability lookup</li>
+        <li><span class="check">→</span>Customer/distributor notifications</li>
+        <li><span class="check">→</span>FDA notification within 3 days</li>
+        <li><span class="check">→</span>Recall effectiveness check</li>
+        <li><span class="check">→</span>CAPA linkage & closure</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-icon" style="background:#ede9fe; color:#7152f3">🎓</div>
+        <div class="module-name">Training Management</div>
+      </div>
+      <div class="module-trigger">Triggered: New hires, SOP updates, CAPA actions, audit findings</div>
+      <ul class="module-steps">
+        <li><span class="check">→</span>Training plan per role/function</li>
+        <li><span class="check">→</span>SOP-linked training assignments</li>
+        <li><span class="check">→</span>Completion tracking with due dates</li>
+        <li><span class="check">→</span>Competency assessment & scoring</li>
+        <li><span class="check">→</span>Training record with e-signature</li>
+        <li><span class="check">→</span>Overdue training alerts</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ SUMMARY TABLE ══════════════════════ -->
+<div class="table-section">
+  <div class="section-label">Quick Reference</div>
+  <h2 class="section-title">QMS Touchpoints Summary Table</h2>
+  <p class="section-sub">Every event in the Metformin workflow and which QMS module handled it.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Manufacturing Event</th>
+          <th>QMS Module</th>
+          <th>Action Taken</th>
+          <th>Product Impact</th>
+          <th>Outcome</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>HPMC moisture 4.8% on CoA</td>
+          <td class="td-module">Incoming QC</td>
+          <td>Identity + moisture testing. CoA verified.</td>
+          <td><span class="badge badge-green">None</span></td>
+          <td>✅ Material Approved</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>Reactor R-03 temp excursion to 165°C</td>
+          <td class="td-module">Deviation Management</td>
+          <td>Batch held. Root cause: thermocouple failure. Impact assessment.</td>
+          <td><span class="badge badge-amber">Investigated</span></td>
+          <td>✅ Batch Accepted with Justification</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>Calibration schedule missed (systemic)</td>
+          <td class="td-module">CAPA</td>
+          <td>All reactors recalibrated. Schedule changed to quarterly. SOP updated.</td>
+          <td><span class="badge badge-indigo">Process Improvement</span></td>
+          <td>✅ CAPA Closed — Effective</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>Technicians unaware of new calibration freq.</td>
+          <td class="td-module">Training Module</td>
+          <td>All 8 maintenance techs retrained. Competency test passed.</td>
+          <td><span class="badge badge-violet">Training Done</span></td>
+          <td>✅ Records Captured</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td>Tablet IPC — compression weight check</td>
+          <td class="td-module">QC / IPC</td>
+          <td>Every 15-min checks logged. All within spec (501mg ± 10mg).</td>
+          <td><span class="badge badge-green">Pass</span></td>
+          <td>✅ No Action Needed</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td>Coating humidity spike to 51%RH</td>
+          <td class="td-module">Deviation (Minor)</td>
+          <td>Logged in BMR. Not detected in retained sample at time of release.</td>
+          <td><span class="badge badge-rose">Defect Found Later</span></td>
+          <td>⚠️ Triggered Recall</td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td>QP batch review & certification</td>
+          <td class="td-module">Batch Release</td>
+          <td>All records reviewed. Electronic signature with audit trail per 21 CFR Part 11.</td>
+          <td><span class="badge badge-sky">Released</span></td>
+          <td>✅ 500,000 Tablets to Market</td>
+        </tr>
+        <tr>
+          <td>8</td>
+          <td>Twin tablet complaint — Month 6</td>
+          <td class="td-module">Complaint + Recall</td>
+          <td>Complaint logged. Batch traced. 23 pharmacies notified. Class III recall. FDA informed.</td>
+          <td><span class="badge badge-rose">Class III Recall</span></td>
+          <td>⚠️ Batch Recalled</td>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td>Coating process root cause (humidity)</td>
+          <td class="td-module">CAPA</td>
+          <td>HVAC upgraded. New IPC limit ≤45%RH. SOP revised. Re-validation done.</td>
+          <td><span class="badge badge-indigo">Process Improved</span></td>
+          <td>✅ CAPA Closed — Effective</td>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td>Annual Product Review (APR)</td>
+          <td class="td-module">Quality Review</td>
+          <td>All batches, complaints, deviations, CAPAs reviewed. Trend analysis completed.</td>
+          <td><span class="badge badge-violet">Report Submitted</span></td>
+          <td>✅ FDA Compliant</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════ FOOTER ══════════════════════ -->
+<div class="page-footer">
+  <p><strong>QMS Workflow Document</strong> — Pharmaceutical Manufacturing Case Study</p>
+  <p style="margin-top:.5rem">API: Metformin Hydrochloride &nbsp;|&nbsp; FDF: Metformin HCl 500mg ER Tablets &nbsp;|&nbsp; Regulations: 21 CFR 210/211, ICH Q7/Q8/Q9/Q10</p>
+  <p style="margin-top:.5rem">Prepared in context of AIVOA.QMS.AI Assessment — Section 2 &nbsp;|&nbsp; © 2026</p>
+</div>
+
+</body>
+</html>
