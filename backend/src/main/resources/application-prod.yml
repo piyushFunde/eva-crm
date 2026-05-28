@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:mysql://${MYSQLHOST}:${MYSQLPORT}/${MYSQLDATABASE}?useSSL=false&serverTimezone=UTC
-    username: ${MYSQLUSER}
-    password: ${MYSQLPASSWORD}
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://${MYSQLHOST}:${MYSQLPORT}/${MYSQLDATABASE}?useSSL=false&serverTimezone=UTC}
+    username: ${SPRING_DATASOURCE_USERNAME:${MYSQLUSER}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${MYSQLPASSWORD}}
     driver-class-name: com.mysql.cj.jdbc.Driver
     # Optimized Hikari Connection Pool Settings (Task 5)
     hikari:
