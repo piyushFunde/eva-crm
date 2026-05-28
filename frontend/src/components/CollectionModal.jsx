@@ -91,7 +91,7 @@ export default function CollectionModal({ customer, onClose }) {
     formData.append('clientGeneratedId', clientGeneratedId);
     formData.append('deviceId', deviceId || 'unknown-device');
     if (data.notes) formData.append('notes', data.notes);
-    if (processedImage) formData.append('receiptImage', processedImage);
+    if (processedImage) formData.append('receiptImage', processedImage, receiptImage.name);
 
     const result = await recordCollection(formData);
     if (result.success) {
