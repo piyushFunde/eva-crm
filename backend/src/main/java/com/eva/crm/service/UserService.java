@@ -41,6 +41,15 @@ public class UserService {
     }
 
     @org.springframework.transaction.annotation.Transactional
+    public void changePassword(User user, String oldPassword, String newPassword) {
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new RuntimeException("Current password is incorrect");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
     public void deleteUser(Long id) {
         // 1. Unassign all customers from this user
         List<com.eva.crm.entity.Customer> customers = customerRepository.findAll();

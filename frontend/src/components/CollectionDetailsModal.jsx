@@ -5,6 +5,12 @@ import { formatCurrency, formatTime } from '@/utils/formatters';
 export default function CollectionDetailsModal({ record, onClose }) {
   if (!record) return null;
 
+  const getReceiptUrl = (path) => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
+    const baseServerUrl = apiUrl.replace(/\/api\/v1\/?$/, '');
+    return `${baseServerUrl}/uploads/receipts/${path}`;
+  };
+
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-[#0F1923]/80 backdrop-blur-sm" onClick={onClose}>
       <motion.div 
@@ -96,7 +102,7 @@ export default function CollectionDetailsModal({ record, onClose }) {
               <div className="flex items-center justify-between px-1">
                 <h3 className="text-[11px] font-black text-white/30 uppercase tracking-[0.2em]">Transaction Evidence</h3>
                 <a 
-                  href={`http://localhost:8080/uploads/receipts/${record.receiptImagePath}`} 
+                  href={getReceiptUrl(record.receiptImagePath)} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-[10px] font-black text-[#4ECDC4] uppercase tracking-widest hover:opacity-80 transition-opacity"
@@ -106,7 +112,7 @@ export default function CollectionDetailsModal({ record, onClose }) {
               </div>
               <div className="bg-[#0F1923] rounded-[24px] p-2 border border-white/5 h-64 flex justify-center items-center overflow-hidden group">
                 <img 
-                  src={`http://localhost:8080/uploads/receipts/${record.receiptImagePath}`} 
+                  src={getReceiptUrl(record.receiptImagePath)} 
                   alt="Receipt" 
                   className="max-h-full object-contain rounded-xl transition-transform duration-500 group-hover:scale-105"
                 />
