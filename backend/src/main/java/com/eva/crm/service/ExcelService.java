@@ -34,7 +34,7 @@ public class ExcelService {
     public com.eva.crm.dto.UploadResponseDTO processExcelFile(MultipartFile file) {
         int count = 0;
         List<String> errors = new ArrayList<>();
-        try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
+        try (InputStream is = file.getInputStream(); Workbook workbook = org.apache.poi.ss.usermodel.WorkbookFactory.create(is)) {
             Sheet sheet = workbook.getSheetAt(0);
             List<Customer> customers = new ArrayList<>();
 
