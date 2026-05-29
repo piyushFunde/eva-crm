@@ -132,6 +132,9 @@ public class ExcelService {
 
         log.info("CSV fallback using delimiter: '{}'", delimiter.equals("\t") ? "TAB" : ",");
 
+        // Column index map — will be set from header row
+        int[] idxMap = {0, 1, 2, 3, 4, 5}; // defaults: date, phone, name, amount, fosId, fosName
+
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8))) {
 
@@ -139,19 +142,26 @@ public class ExcelService {
             int rowIndex = 0;
 
             while ((line = reader.readLine()) != null) {
-                if (rowIndex == 0) { rowIndex++; continue; } // skip header row
-
                 if (line.trim().isEmpty()) { rowIndex++; continue; }
 
                 String[] cols = line.split(delimiter, -1);
 
+                // Parse header row to detect column positions dynamically
+                if (rowIndex == 0) {
+                    idxMap = detectColumns(cols);
+                    log.info("CSV column map detected: date={}, phone={}, name={}, amount={}, fosId={}, fosName={}",
+                            idxMap[0], idxMap[1], idxMap[2], idxMap[3], idxMap[4], idxMap[5]);
+                    rowIndex++;
+                    continue;
+                }
+
                 try {
-                    String dateStr   = safeGet(cols, 0);  // Column A
-                    String phone     = safeGet(cols, 1);  // Column B
-                    String name      = safeGet(cols, 2);  // Column C
-                    String amountStr = safeGet(cols, 4);  // Column E
-                    String fosId     = safeGet(cols, 5);  // Column F
-                    String fosName   = safeGet(cols, 6);  // Column G
+                    String dateStr   = safeGet(cols, idxMap[0]);
+                    String phone     = safeGet(cols, idxMap[1]);
+                    String name      = safeGet(cols, idxMap[2]);
+                    String amountStr = safeGet(cols, idxMap[3]);
+                    String fosId     = safeGet(cols, idxMap[4]);
+                    String fosName   = safeGet(cols, idxMap[5]);
 
                     if (name.isEmpty() || phone.isEmpty() || amountStr.isEmpty()) {
                         errors.add("Row " + (rowIndex + 1) + ": Missing required fields");
@@ -252,13 +262,33 @@ public class ExcelService {
     }
 
     private String safeGet(String[] arr, int index) {
-        if (index >= arr.length) return "";
+        if (index < 0 || index >= arr.length) return "";
         String val = arr[index];
         // Remove surrounding quotes if CSV quoted
         if (val != null && val.startsWith("\"") && val.endsWith("\"")) {
             val = val.substring(1, val.length() - 1);
         }
         return val != null ? val.trim() : "";
+    }
+
+    /**
+     * Auto-detect column positions from the header row by matching known keywords.
+     * Handles both 6-column TSV (no Column D) and 7-column Excel (with empty Column D).
+     */
+    private int[] detectColumns(String[] headers) {
+        int dateIdx = 0, phoneIdx = 1, nameIdx = 2, amountIdx = 3, fosIdIdx = 4, fosNameIdx = 5;
+
+        for (int i = 0; i < headers.length; i++) {
+            String h = safeGet(headers, i).toLowerCase();
+            if (h.contains("date"))                      dateIdx   = i;
+            else if (h.contains("prm") || h.contains("id") && i < 3) phoneIdx = i;
+            else if (h.contains("partner name") || h.contains("name") && i < 4) nameIdx = i;
+            else if (h.contains("amount") || h.contains("transfer"))   amountIdx = i;
+            else if (h.contains("fos id") || (h.contains("fos") && h.contains("id"))) fosIdIdx = i;
+            else if (h.contains("fos name") || (h.contains("fos") && h.contains("name"))) fosNameIdx = i;
+        }
+
+        return new int[]{dateIdx, phoneIdx, nameIdx, amountIdx, fosIdIdx, fosNameIdx};
     }
 
     private com.eva.crm.dto.UploadResponseDTO errorResponse(String message) {
