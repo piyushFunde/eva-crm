@@ -35,6 +35,10 @@ export default function Dashboard() {
     loadData();
   }, [fetchDashboardStats, isOnline]);
 
+  const isAdmin = user?.role === 'ROLE_ADMIN' || user?.role === 'ADMIN';
+  const roleLabel = isAdmin ? 'Administrator' : 'Executive';
+  const firstName = user?.name?.split(' ')[0] || user?.fullName?.split(' ')[0] || roleLabel;
+
   const today = new Date().toLocaleDateString('en-IN', {
     weekday: 'long', day: 'numeric', month: 'short'
   });
@@ -77,7 +81,7 @@ export default function Dashboard() {
         </div>
         <h2 className="text-3xl font-black text-white leading-tight tracking-tighter">
           Welcome back,<br />
-          {user?.name?.split(' ')[0] || 'Executive'}
+          {firstName}
         </h2>
         <div className="flex items-center gap-4 pt-1">
            <div className="flex items-center gap-1.5">
