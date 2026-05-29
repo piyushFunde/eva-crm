@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import {
   Upload, TrendingUp, FileSpreadsheet, IndianRupee, Info, CheckCircle,
-  Loader2, Users, Target, ShieldCheck, Plus, Trash2, X, Lock, User as UserIcon,
+  Loader2, Users, Target, ShieldCheck, Trash2, X, Lock, User as UserIcon,
   Activity, Share, AlertTriangle, DatabaseZap
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -15,19 +15,15 @@ export default function Admin() {
   const [activeTab, setActiveTab] = useState('operations'); // 'operations' or 'team'
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [showAddModal, setShowAddModal] = useState(false);
   const fileRef = useRef();
 
   const [isUploading, setIsUploading] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [showClearModal, setShowClearModal] = useState(null); // 'all' | 'pending' | null
   const [clearConfirmText, setClearConfirmText] = useState('');
 
   const { stats, fetchDashboardStats, teamPerformance, fetchTeamPerformance } = useDashboardStore();
-  const { executives, fetchExecutives, addExecutive, deleteExecutive } = useUserStore();
-
-  const [newExec, setNewExec] = useState({ fullName: '', username: '', password: '123' });
+  const { executives, fetchExecutives, deleteExecutive } = useUserStore();
 
   useEffect(() => {
     fetchDashboardStats();
@@ -87,17 +83,6 @@ export default function Admin() {
     }
   };
 
-  const handleAddExec = async (e) => {
-    e.preventDefault();
-    setIsCreating(true);
-    const success = await addExecutive(newExec);
-    if (success) {
-      setShowAddModal(false);
-      setNewExec({ fullName: '', username: '', password: '123' });
-      fetchTeamPerformance();
-    }
-    setIsCreating(false);
-  };
 
   return (
     <div className="min-h-screen bg-[#0F1923] px-5 py-8 space-y-8 max-w-7xl mx-auto w-full pb-32">
@@ -311,13 +296,6 @@ export default function Admin() {
                   <Share size={16} />
                   Share Link
                 </button>
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className="flex items-center gap-2 px-5 py-3 bg-[#4ECDC4] text-[#0F1923] rounded-xl font-black text-[11px] uppercase tracking-widest hover:scale-[1.05] active:scale-[0.95] transition-all"
-                >
-                  <Plus size={16} />
-                  Register Executive
-                </button>
               </div>
             </div>
 
@@ -356,79 +334,6 @@ export default function Admin() {
         )}
       </AnimatePresence>
 
-      {/* ── Add Executive Modal ─────────────────────────── */}
-      <AnimatePresence>
-        {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-5">
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowAddModal(false)}
-              className="absolute inset-0 bg-[#0F1923]/90 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="w-full max-w-md glass-card !p-10 relative z-10 border-white/10"
-            >
-              <button onClick={() => setShowAddModal(false)} className="absolute top-6 right-6 text-white/20 hover:text-white transition-colors">
-                <X size={20} />
-              </button>
-
-              <div className="text-center mb-10">
-                <div className="w-16 h-16 bg-[#4ECDC4]/10 rounded-2xl flex items-center justify-center text-[#4ECDC4] mx-auto mb-6 border border-[#4ECDC4]/20">
-                  <Users size={32} />
-                </div>
-                <h3 className="text-2xl font-black text-white tracking-tighter">Register Staff</h3>
-                <p className="text-[11px] font-black text-white/20 uppercase tracking-widest mt-2">Add a new executive to the force</p>
-              </div>
-
-              <form onSubmit={handleAddExec} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1">Full Name</label>
-                  <div className="relative">
-                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={16} />
-                    <input
-                      required type="text" placeholder="e.g. John Doe"
-                      value={newExec.fullName} onChange={(e) => setNewExec({ ...newExec, fullName: e.target.value })}
-                      className="w-full bg-white/5 border border-white/5 rounded-xl py-4 pl-12 pr-4 text-sm font-bold text-white outline-none focus:border-[#4ECDC4]/50 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1">Username</label>
-                  <div className="relative">
-                    <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={16} />
-                    <input
-                      required type="text" placeholder="e.g. john_doe"
-                      value={newExec.username} onChange={(e) => setNewExec({ ...newExec, username: e.target.value.toLowerCase() })}
-                      className="w-full bg-white/5 border border-white/5 rounded-xl py-4 pl-12 pr-4 text-sm font-bold text-white outline-none focus:border-[#4ECDC4]/50 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1">Default Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={16} />
-                    <input
-                      required type="text" placeholder="123"
-                      value={newExec.password} onChange={(e) => setNewExec({ ...newExec, password: e.target.value })}
-                      className="w-full bg-white/5 border border-white/5 rounded-xl py-4 pl-12 pr-4 text-sm font-bold text-white outline-none focus:border-[#4ECDC4]/50 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  disabled={isCreating}
-                  className="w-full h-14 bg-[#4ECDC4] text-[#0F1923] rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] shadow-xl shadow-[#4ECDC4]/20 hover:scale-[1.02] active:scale-[0.98] transition-all mt-4"
-                >
-                  {isCreating ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Confirm Registration'}
-                </button>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* ── Clear Data Confirmation Modal ────────────────── */}
       <AnimatePresence>
