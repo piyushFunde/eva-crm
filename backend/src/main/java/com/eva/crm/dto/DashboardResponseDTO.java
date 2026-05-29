@@ -11,4 +11,6 @@ public class DashboardResponseDTO {
     private BigDecimal todayTarget;
     private BigDecimal todayCollected;
     private BigDecimal todayPending;
+    private long assignedCustomers;
+    private long todayCollectedCount;
 }

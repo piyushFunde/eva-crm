@@ -26,6 +26,9 @@ public interface CollectionLogRepository extends JpaRepository<CollectionLog, Lo
     @Query("SELECT SUM(c.amountCollected) FROM CollectionLog c WHERE c.executive.id = :executiveId AND c.collectedAt >= :startOfDay")
     BigDecimal sumAmountCollectedTodayByExecutive(@Param("executiveId") Long executiveId, @Param("startOfDay") LocalDateTime startOfDay);
 
+    @Query("SELECT COUNT(c) FROM CollectionLog c WHERE c.executive.id = :executiveId AND c.collectedAt >= :startOfDay")
+    long countCollectedTodayByExecutive(@Param("executiveId") Long executiveId, @Param("startOfDay") LocalDateTime startOfDay);
+
     boolean existsByClientGeneratedId(String clientGeneratedId);
 
     @Query("SELECT SUM(c.amountCollected) FROM CollectionLog c WHERE c.collectedAt BETWEEN :start AND :end")

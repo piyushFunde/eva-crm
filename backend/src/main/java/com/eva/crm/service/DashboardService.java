@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -26,41 +25,56 @@ public class DashboardService {
 
     public DashboardResponseDTO getExecutiveDashboard(User executive) {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-        
+
         BigDecimal collected = collectionLogRepository.sumAmountCollectedTodayByExecutive(executive.getId(), startOfDay);
         if (collected == null) collected = BigDecimal.ZERO;
 
-        // Calculate Target based on DUE customers assigned to executive
-        List<Customer> allAssigned = customerRepository.findAll(); // Simplified for now
+        // Target = sum of all PENDING customers assigned to this executive
+        // whose dueDate is on or before today (includes overdue from previous days)
+        List<Customer> allAssigned = customerRepository.findAll();
         BigDecimal target = BigDecimal.ZERO;
+        long assignedCount = 0;
+
         for (Customer c : allAssigned) {
-            if (c.getAssignedExecutive() != null && c.getAssignedExecutive().getId().equals(executive.getId()) 
-                    && c.getDueDate().isEqual(LocalDate.now())) {
+            if (c.getAssignedExecutive() != null
+                    && c.getAssignedExecutive().getId().equals(executive.getId())
+                    && !c.getDueDate().isAfter(LocalDate.now())  // dueDate <= today
+                    && "PENDING".equalsIgnoreCase(c.getStatus())) {
                 target = target.add(c.getEmiAmount());
+                assignedCount++;
             }
         }
 
         BigDecimal pending = target.subtract(collected);
         if (pending.compareTo(BigDecimal.ZERO) < 0) pending = BigDecimal.ZERO;
 
+        long collectedCount = collectionLogRepository.countCollectedTodayByExecutive(executive.getId(), startOfDay);
+
         return DashboardResponseDTO.builder()
                 .todayTarget(target)
                 .todayCollected(collected)
                 .todayPending(pending)
+                .assignedCustomers(assignedCount)
+                .todayCollectedCount(collectedCount)
                 .build();
     }
 
     public DashboardResponseDTO getAdminDashboard() {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-        
+
         BigDecimal collected = collectionLogRepository.sumAmountCollectedToday(startOfDay);
         if (collected == null) collected = BigDecimal.ZERO;
 
+        // Target = sum of all PENDING customers with dueDate <= today (includes overdue)
         List<Customer> allCustomers = customerRepository.findAll();
         BigDecimal target = BigDecimal.ZERO;
+        long totalPending = 0;
+
         for (Customer c : allCustomers) {
-            if (c.getDueDate().isEqual(LocalDate.now())) {
+            if (!c.getDueDate().isAfter(LocalDate.now())
+                    && "PENDING".equalsIgnoreCase(c.getStatus())) {
                 target = target.add(c.getEmiAmount());
+                totalPending++;
             }
         }
 
@@ -71,32 +85,33 @@ public class DashboardService {
                 .todayTarget(target)
                 .todayCollected(collected)
                 .todayPending(pending)
+                .assignedCustomers(totalPending)
                 .build();
     }
 
     public List<TeamPerformanceDTO> getTeamPerformance() {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         List<User> executives = userRepository.findAll();
-        
+
         return executives.stream()
             .filter(u -> "ROLE_EXECUTIVE".equals(u.getRole().name()) || "EXECUTIVE".equals(u.getRole().name()))
             .map(exec -> {
                 BigDecimal collected = collectionLogRepository.sumAmountCollectedTodayByExecutive(exec.getId(), startOfDay);
                 if (collected == null) collected = BigDecimal.ZERO;
-                
+
                 List<Customer> allCustomers = customerRepository.findAll();
                 BigDecimal target = BigDecimal.ZERO;
                 long count = 0;
-                
+
                 for (Customer c : allCustomers) {
-                    if (c.getAssignedExecutive() != null && c.getAssignedExecutive().getId().equals(exec.getId())) {
+                    if (c.getAssignedExecutive() != null
+                            && c.getAssignedExecutive().getId().equals(exec.getId())
+                            && !c.getDueDate().isAfter(LocalDate.now())
+                            && "PENDING".equalsIgnoreCase(c.getStatus())) {
                         count++;
-                        // Target is sum of all emiAmounts (total pending) + collected today
                         target = target.add(c.getEmiAmount());
                     }
                 }
-                
-                target = target.add(collected); // Real total target including what was collected
 
                 return TeamPerformanceDTO.builder()
                         .executiveId(exec.getId())
