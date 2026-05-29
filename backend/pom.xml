@@ -62,7 +62,12 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Apache POI for Excel Parsing -->
+        <!-- Apache POI for Excel Parsing (.xlsx via poi-ooxml, .xls via poi) -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>5.2.3</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
