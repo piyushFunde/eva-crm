@@ -4,6 +4,8 @@ import com.eva.crm.dto.ApiResponse;
 import com.eva.crm.dto.TeamPerformanceDTO;
 import com.eva.crm.dto.UserCreateDTO;
 import com.eva.crm.entity.User;
+import com.eva.crm.repository.CollectionLogRepository;
+import com.eva.crm.repository.CustomerRepository;
 import com.eva.crm.service.DashboardService;
 import com.eva.crm.service.ExcelService;
 import com.eva.crm.service.UserService;
@@ -23,6 +25,8 @@ public class AdminController {
     private final ExcelService excelService;
     private final DashboardService dashboardService;
     private final UserService userService;
+    private final CustomerRepository customerRepository;
+    private final CollectionLogRepository collectionLogRepository;
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/team-performance")
@@ -70,5 +74,35 @@ public class AdminController {
     public ResponseEntity<ApiResponse<String>> deleteExecutive(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.ok(ApiResponse.success("Executive removed", null));
+    }
+
+    /** Delete ALL customers (and their collection logs) in one go */
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/customers/all")
+    public ResponseEntity<ApiResponse<String>> deleteAllCustomers() {
+        try {
+            long total = customerRepository.count();
+            collectionLogRepository.deleteAll(); // must delete logs first (FK constraint)
+            customerRepository.deleteAll();
+            return ResponseEntity.ok(ApiResponse.success("Cleared " + total + " customer records successfully", null));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(ApiResponse.error("Failed to clear data: " + e.getMessage()));
+        }
+    }
+
+    /** Delete only PENDING customers (preserves collected history) */
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/customers/pending")
+    public ResponseEntity<ApiResponse<String>> deletePendingCustomers() {
+        try {
+            java.util.List<com.eva.crm.entity.Customer> pending = customerRepository.findAll()
+                    .stream()
+                    .filter(c -> "PENDING".equalsIgnoreCase(c.getStatus()))
+                    .toList();
+            customerRepository.deleteAll(pending);
+            return ResponseEntity.ok(ApiResponse.success("Cleared " + pending.size() + " pending records", null));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(ApiResponse.error("Failed to clear pending data: " + e.getMessage()));
+        }
     }
 }

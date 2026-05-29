@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import {
   Upload, TrendingUp, FileSpreadsheet, IndianRupee, Info, CheckCircle,
   Loader2, Users, Target, ShieldCheck, Plus, Trash2, X, Lock, User as UserIcon,
-  Activity, Share
+  Activity, Share, AlertTriangle, DatabaseZap
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,6 +20,9 @@ export default function Admin() {
 
   const [isUploading, setIsUploading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+  const [showClearModal, setShowClearModal] = useState(null); // 'all' | 'pending' | null
+  const [clearConfirmText, setClearConfirmText] = useState('');
 
   const { stats, fetchDashboardStats, teamPerformance, fetchTeamPerformance } = useDashboardStore();
   const { executives, fetchExecutives, addExecutive, deleteExecutive } = useUserStore();
@@ -65,6 +68,24 @@ export default function Admin() {
       setIsUploading(false);
     }
   };
+  const handleClearData = async (type) => {
+    setIsClearing(true);
+    try {
+      const endpoint = type === 'all' ? '/admin/customers/all' : '/admin/customers/pending';
+      const response = await api.delete(endpoint);
+      if (response.success) {
+        toast.success(response.message || 'Data cleared successfully!');
+        fetchDashboardStats();
+        fetchTeamPerformance();
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to clear data');
+    } finally {
+      setIsClearing(false);
+      setShowClearModal(null);
+      setClearConfirmText('');
+    }
+  };
 
   const handleAddExec = async (e) => {
     e.preventDefault();
@@ -73,7 +94,7 @@ export default function Admin() {
     if (success) {
       setShowAddModal(false);
       setNewExec({ fullName: '', username: '', password: '123' });
-      fetchTeamPerformance(); // Update performance list too
+      fetchTeamPerformance();
     }
     setIsCreating(false);
   };
@@ -176,6 +197,39 @@ export default function Admin() {
                 >
                   {isUploading ? <><Loader2 className="w-5 h-5 animate-spin" />Parsing...</> : <><Upload className="w-4 h-4" />Process Dataset</>}
                 </button>
+              </div>
+
+              {/* ── Danger Zone: Bulk Delete ─────────────────── */}
+              <div className="glass-card !p-6 border border-red-500/10 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 blur-[40px] -mr-8 -mt-8" />
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center border border-red-500/10">
+                    <DatabaseZap className="w-5 h-5 text-red-400" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Danger Zone</p>
+                    <p className="text-sm font-black text-white tracking-tight mt-0.5">Reset Dataset</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => { setShowClearModal('pending'); setClearConfirmText(''); }}
+                    className="flex items-center justify-center gap-2 h-11 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 font-black text-[10px] uppercase tracking-widest hover:bg-amber-500/20 transition-all"
+                  >
+                    <Trash2 size={14} />
+                    Clear Pending
+                  </button>
+                  <button
+                    onClick={() => { setShowClearModal('all'); setClearConfirmText(''); }}
+                    className="flex items-center justify-center gap-2 h-11 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 font-black text-[10px] uppercase tracking-widest hover:bg-red-500/20 transition-all"
+                  >
+                    <Trash2 size={14} />
+                    Clear All Data
+                  </button>
+                </div>
+                <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest mt-3 text-center">
+                  Pending Only = keeps collection history · All Data = full reset
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-5">
@@ -371,6 +425,66 @@ export default function Admin() {
                   {isCreating ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Confirm Registration'}
                 </button>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Clear Data Confirmation Modal ────────────────── */}
+      <AnimatePresence>
+        {showClearModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-5">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => { setShowClearModal(null); setClearConfirmText(''); }}
+              className="absolute inset-0 bg-[#0F1923]/90 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="w-full max-w-md glass-card !p-10 relative z-10 border-red-500/20"
+            >
+              <button onClick={() => { setShowClearModal(null); setClearConfirmText(''); }} className="absolute top-6 right-6 text-white/20 hover:text-white transition-colors">
+                <X size={20} />
+              </button>
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-400 mx-auto mb-6 border border-red-500/20">
+                  <AlertTriangle size={32} />
+                </div>
+                <h3 className="text-2xl font-black text-white tracking-tighter">
+                  {showClearModal === 'all' ? 'Clear All Data?' : 'Clear Pending Data?'}
+                </h3>
+                <p className="text-[11px] font-black text-white/30 uppercase tracking-widest mt-3">
+                  {showClearModal === 'all'
+                    ? 'Permanently deletes ALL customers and collection history'
+                    : 'Deletes PENDING customers only — collected history is kept'}
+                </p>
+              </div>
+              <div className="space-y-4">
+                <p className="text-[11px] font-black text-white/40 uppercase tracking-widest text-center">
+                  Type <span className="text-red-400 font-black">{showClearModal === 'all' ? 'DELETE' : 'CLEAR'}</span> to confirm
+                </p>
+                <input
+                  type="text"
+                  placeholder={showClearModal === 'all' ? 'DELETE' : 'CLEAR'}
+                  value={clearConfirmText}
+                  onChange={(e) => setClearConfirmText(e.target.value.toUpperCase())}
+                  className="w-full bg-red-500/5 border border-red-500/20 rounded-xl py-4 px-5 text-sm font-bold text-white outline-none focus:border-red-500/50 transition-all text-center tracking-[0.3em]"
+                />
+                <button
+                  onClick={() => handleClearData(showClearModal)}
+                  disabled={
+                    isClearing ||
+                    (showClearModal === 'all' && clearConfirmText !== 'DELETE') ||
+                    (showClearModal === 'pending' && clearConfirmText !== 'CLEAR')
+                  }
+                  className="w-full h-14 rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] transition-all mt-2 disabled:opacity-30 disabled:cursor-not-allowed bg-red-500 text-white hover:bg-red-600 active:scale-[0.98] flex items-center justify-center gap-3"
+                >
+                  {isClearing
+                    ? <><Loader2 className="w-5 h-5 animate-spin" />Deleting...</>
+                    : <><Trash2 className="w-4 h-4" />{showClearModal === 'all' ? 'Delete Everything' : 'Clear Pending'}</>
+                  }
+                </button>
+              </div>
             </motion.div>
           </div>
         )}
