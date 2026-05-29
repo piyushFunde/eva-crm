@@ -45,14 +45,15 @@ public class ExcelService {
                     continue;
 
                 try {
-                    String name = getCellValue(row, 0);
-                    String phone = getCellValue(row, 1);
-                    String address = getCellValue(row, 2);
-                    String amountStr = getCellValue(row, 3);
-                    String execUsername = getCellValue(row, 4);
+                    String dateStr = getCellValue(row, 0);      // Column A: Order Date
+                    String phone = getCellValue(row, 1);        // Column B: Partner PRM ID
+                    String name = getCellValue(row, 2);         // Column C: Partner Name
+                    String amountStr = getCellValue(row, 4);    // Column E: Transfer Amount
+                    String fosId = getCellValue(row, 5);        // Column F: FOS ID (Unique Executive Username)
+                    String fosName = getCellValue(row, 6);      // Column G: FOS Name (Executive Full Name)
 
                     if (name.isEmpty() || phone.isEmpty() || amountStr.isEmpty()) {
-                        errors.add("Row " + (i + 1) + ": Missing required fields (Name, Phone, or Amount)");
+                        errors.add("Row " + (i + 1) + ": Missing required fields (Partner Name, PRM ID, or Transfer Amount)");
                         continue;
                     }
 
@@ -61,28 +62,38 @@ public class ExcelService {
                     if (cleanedAmount.isEmpty()) cleanedAmount = "0";
                     BigDecimal emiAmount = new BigDecimal(cleanedAmount);
 
+                    // Parse Date (dd.MM.yyyy)
+                    LocalDate dueDate = LocalDate.now();
+                    if (!dateStr.isEmpty()) {
+                        try {
+                            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy");
+                            dueDate = LocalDate.parse(dateStr, formatter);
+                        } catch (Exception e) {
+                            // Fallback to current date
+                        }
+                    }
+
                     User executive = null;
-                    if (!execUsername.isEmpty()) {
-                        String rawName = execUsername.trim();
-                        String normalizedUsername = rawName.toLowerCase().replaceAll("\\s+", "");
-                        
-                        // 1. Try to find by normalized username
-                        Optional<User> execOpt = userRepository.findByUsername(normalizedUsername);
+                    if (!fosId.isEmpty()) {
+                        String username = fosId.trim();
+                        // 1. Try to find by FOS ID username
+                        Optional<User> execOpt = userRepository.findByUsername(username);
                         if (execOpt.isPresent()) {
                             executive = execOpt.get();
                         } else {
-                            // 2. Try match by full name (ignore case/extra spaces)
+                            // 2. Try match by full name (ignore case/extra spaces) if FOS ID is new but name matches an existing one
+                            String rawName = fosName.trim();
                             List<User> allUsers = userRepository.findAll();
                             executive = allUsers.stream()
                                     .filter(u -> u.getFullName().trim().equalsIgnoreCase(rawName))
                                     .findFirst()
                                     .orElse(null);
                             
-                            // 3. Auto-Register if still not found
+                            // 3. Auto-Register under FOS ID if still not found
                             if (executive == null) {
                                 executive = User.builder()
-                                        .fullName(rawName)
-                                        .username(normalizedUsername)
+                                        .fullName(rawName.isEmpty() ? "FOS " + username : rawName)
+                                        .username(username)
                                         .password(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode("Staff@123"))
                                         .role(Role.ROLE_EXECUTIVE)
                                         .build();
@@ -94,9 +105,9 @@ public class ExcelService {
                     Customer customer = Customer.builder()
                             .name(name)
                             .phone(phone)
-                            .address(address)
+                            .address("Partner ID: " + phone)
                             .emiAmount(emiAmount)
-                            .dueDate(LocalDate.now())
+                            .dueDate(dueDate)
                             .status("PENDING")
                             .assignedExecutive(executive)
                             .build();
