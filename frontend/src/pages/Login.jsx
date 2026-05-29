@@ -45,7 +45,9 @@ export default function Login() {
     }
     
     if (result.success) {
-      navigate('/dashboard', { replace: true });
+      const userData = result.user || JSON.parse(localStorage.getItem('user'));
+      const isAdmin = userData?.role === 'ROLE_ADMIN' || userData?.role === 'ADMIN';
+      navigate(isAdmin ? '/admin' : '/dashboard', { replace: true });
     }
   };
 

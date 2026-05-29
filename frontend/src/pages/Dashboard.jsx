@@ -36,8 +36,10 @@ export default function Dashboard() {
   }, [fetchDashboardStats, isOnline]);
 
   const isAdmin = user?.role === 'ROLE_ADMIN' || user?.role === 'ADMIN';
-  const roleLabel = isAdmin ? 'Administrator' : 'Executive';
-  const firstName = user?.name?.split(' ')[0] || user?.fullName?.split(' ')[0] || roleLabel;
+  // Admin always shows 'Administrator' - never show DB names like 'System'
+  const firstName = isAdmin
+    ? 'Administrator'
+    : (user?.name?.split(' ')[0] || user?.fullName?.split(' ')[0] || 'Executive');
 
   const today = new Date().toLocaleDateString('en-IN', {
     weekday: 'long', day: 'numeric', month: 'short'
