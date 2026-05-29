@@ -25,6 +25,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Slf4j
 @Service
@@ -33,6 +36,7 @@ public class ExcelService {
 
     private final CustomerRepository customerRepository;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     private final DataFormatter dataFormatter = new DataFormatter();
 
     @Transactional
@@ -80,6 +84,14 @@ public class ExcelService {
             Sheet sheet = workbook.getSheetAt(0);
             List<Customer> customers = new ArrayList<>();
 
+            // Cache users to avoid N+1 query inside loop
+            List<User> allUsers = userRepository.findAll();
+            Map<String, User> usernameMap = allUsers.stream()
+                    .collect(Collectors.toMap(User::getUsername, u -> u, (u1, u2) -> u1));
+            Map<String, User> nameMap = allUsers.stream()
+                    .filter(u -> u.getFullName() != null)
+                    .collect(Collectors.toMap(u -> u.getFullName().trim().toLowerCase(), u -> u, (u1, u2) -> u1));
+
             // Row 0 = header, data starts at row 1
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
@@ -98,7 +110,7 @@ public class ExcelService {
                         continue;
                     }
 
-                    Customer customer = buildCustomer(dateStr, phone, name, amountStr, fosId, fosName);
+                    Customer customer = buildCustomer(dateStr, phone, name, amountStr, fosId, fosName, usernameMap, nameMap);
                     customers.add(customer);
                     count++;
                 } catch (Exception e) {
@@ -135,6 +147,14 @@ public class ExcelService {
         // Column index map — will be set from header row
         int[] idxMap = {0, 1, 2, 3, 4, 5}; // defaults: date, phone, name, amount, fosId, fosName
 
+        // Cache users to avoid N+1 query inside loop
+        List<User> allUsers = userRepository.findAll();
+        Map<String, User> usernameMap = allUsers.stream()
+                .collect(Collectors.toMap(User::getUsername, u -> u, (u1, u2) -> u1));
+        Map<String, User> nameMap = allUsers.stream()
+                .filter(u -> u.getFullName() != null)
+                .collect(Collectors.toMap(u -> u.getFullName().trim().toLowerCase(), u -> u, (u1, u2) -> u1));
+
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8))) {
 
@@ -169,7 +189,7 @@ public class ExcelService {
                         continue;
                     }
 
-                    Customer customer = buildCustomer(dateStr, phone, name, amountStr, fosId, fosName);
+                    Customer customer = buildCustomer(dateStr, phone, name, amountStr, fosId, fosName, usernameMap, nameMap);
                     customers.add(customer);
                     count++;
                 } catch (Exception e) {
@@ -198,46 +218,62 @@ public class ExcelService {
     // ─── Shared: Build a Customer from raw field strings ────────────────────────
 
     private Customer buildCustomer(String dateStr, String phone, String name,
-                                   String amountStr, String fosId, String fosName) {
+                                   String amountStr, String fosId, String fosName,
+                                   java.util.Map<String, User> usernameMap,
+                                   java.util.Map<String, User> nameMap) {
         // Clean amount
         String cleanedAmount = amountStr.replaceAll("[^0-9.]", "");
         if (cleanedAmount.isEmpty()) cleanedAmount = "0";
         BigDecimal emiAmount = new BigDecimal(cleanedAmount);
 
-        // Parse date (dd.MM.yyyy), fallback to today
+        // Parse date (dd.MM.yyyy), fallback to other common formats, then today
         LocalDate dueDate = LocalDate.now();
         if (!dateStr.isEmpty()) {
+            String trimmed = dateStr.trim();
             try {
-                dueDate = LocalDate.parse(dateStr.trim(),
-                        java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-            } catch (Exception ignored) { /* use today */ }
+                dueDate = LocalDate.parse(trimmed, java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+            } catch (Exception e1) {
+                try {
+                    dueDate = LocalDate.parse(trimmed, java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                } catch (Exception e2) {
+                    try {
+                        dueDate = LocalDate.parse(trimmed, java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                    } catch (Exception e3) {
+                        try {
+                            dueDate = LocalDate.parse(trimmed, java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+                        } catch (Exception e4) {
+                            log.warn("Failed to parse date '{}', defaulting to today", dateStr);
+                        }
+                    }
+                }
+            }
         }
 
         // Resolve or auto-create executive
         User executive = null;
         if (!fosId.trim().isEmpty()) {
             String username = fosId.trim();
-            Optional<User> execOpt = userRepository.findByUsername(username);
-            if (execOpt.isPresent()) {
-                executive = execOpt.get();
+            if (usernameMap.containsKey(username)) {
+                executive = usernameMap.get(username);
             } else {
                 String rawName = fosName.trim();
-                List<User> allUsers = userRepository.findAll();
-                executive = allUsers.stream()
-                        .filter(u -> u.getFullName().trim().equalsIgnoreCase(rawName))
-                        .findFirst()
-                        .orElse(null);
-
-                if (executive == null) {
+                String lowerName = rawName.toLowerCase();
+                if (!lowerName.isEmpty() && nameMap.containsKey(lowerName)) {
+                    executive = nameMap.get(lowerName);
+                } else {
                     executive = User.builder()
                             .fullName(rawName.isEmpty() ? "FOS " + username : rawName)
                             .username(username)
-                            .password(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder()
-                                    .encode("Staff@123"))
+                            .password(passwordEncoder.encode("Staff@123"))
                             .role(Role.ROLE_EXECUTIVE)
                             .build();
                     executive = userRepository.saveAndFlush(executive);
                     log.info("Auto-registered new executive: username={}, name={}", username, executive.getFullName());
+                    // Cache the new executive
+                    usernameMap.put(username, executive);
+                    if (!lowerName.isEmpty()) {
+                        nameMap.put(lowerName, executive);
+                    }
                 }
             }
         }

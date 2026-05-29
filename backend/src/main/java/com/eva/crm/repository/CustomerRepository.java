@@ -19,4 +19,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     @Query("SELECT c FROM Customer c WHERE c.emiAmount > 10000 AND c.status != 'COMPLETED' ORDER BY c.emiAmount DESC")
     List<Customer> findHighRiskCustomers(Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM Customer c WHERE c.status = :status")
+    int deleteByStatus(String status);
 }

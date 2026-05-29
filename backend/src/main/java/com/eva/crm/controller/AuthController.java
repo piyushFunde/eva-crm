@@ -26,6 +26,10 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @org.springframework.beans.factory.annotation.Value("${app.admin-recovery-key:EVA-ADMIN-SAFE-2024}")
+    private String masterRecoveryKey;
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody AuthRequest request) {
@@ -56,9 +60,6 @@ public class AuthController {
         String username = request.get("username");
         String oldPassword = request.get("oldPassword"); // This can be the Current Password OR the Recovery Key
         String newPassword = request.get("newPassword");
-        
-        // HARDCODED MASTER RECOVERY KEY
-        String MASTER_RECOVERY_KEY = "EVA-ADMIN-SAFE-2024";
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -66,11 +67,9 @@ public class AuthController {
         if (!user.getRole().name().equals("ROLE_ADMIN")) {
             throw new RuntimeException("Unauthorized: This reset is only for administrators");
         }
-
-        PasswordEncoder passwordEncoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
         
         // Check if user is using the Master Recovery Key OR their actual Current Password
-        boolean isRecovery = oldPassword.equals(MASTER_RECOVERY_KEY);
+        boolean isRecovery = oldPassword.equals(masterRecoveryKey);
         boolean isCurrentPasswordCorrect = passwordEncoder.matches(oldPassword, user.getPassword());
 
         if (!isRecovery && !isCurrentPasswordCorrect) {

@@ -21,6 +21,7 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
 
 app:
+  admin-recovery-key: ${ADMIN_RECOVERY_KEY:EVA-ADMIN-SAFE-2024}
   jwt:
     secret: ${JWT_SECRET}
     expiration: 86400000 # 24 hours

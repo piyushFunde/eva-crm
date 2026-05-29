@@ -93,14 +93,11 @@ public class AdminController {
     /** Delete only PENDING customers (preserves collected history) */
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/customers/pending")
+    @org.springframework.transaction.annotation.Transactional
     public ResponseEntity<ApiResponse<String>> deletePendingCustomers() {
         try {
-            java.util.List<com.eva.crm.entity.Customer> pending = customerRepository.findAll()
-                    .stream()
-                    .filter(c -> "PENDING".equalsIgnoreCase(c.getStatus()))
-                    .toList();
-            customerRepository.deleteAll(pending);
-            return ResponseEntity.ok(ApiResponse.success("Cleared " + pending.size() + " pending records", null));
+            int deleted = customerRepository.deleteByStatus("PENDING");
+            return ResponseEntity.ok(ApiResponse.success("Cleared " + deleted + " pending records successfully", null));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(ApiResponse.error("Failed to clear pending data: " + e.getMessage()));
         }
