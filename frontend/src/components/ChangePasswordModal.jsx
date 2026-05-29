@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Lock, Loader2, ShieldCheck } from 'lucide-react';
+import { X, Lock, Loader2, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import api from '@/api/axios';
@@ -11,6 +11,9 @@ export default function ChangePasswordModal({ isOpen, onClose, isAdmin = false }
     newPassword: '',
     confirmPassword: ''
   });
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -78,13 +81,20 @@ export default function ChangePasswordModal({ isOpen, onClose, isAdmin = false }
                 <div className="relative">
                   <Lock size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" />
                   <input
-                    type="password"
+                    type={showOldPassword ? "text" : "password"}
                     required
                     value={formData.oldPassword}
                     onChange={(e) => setFormData({...formData, oldPassword: e.target.value})}
                     placeholder={isAdmin ? "Current Password or Recovery Key" : "Existing password"}
-                    className="w-full bg-white/[0.03] border border-white/5 rounded-xl py-3.5 pl-11 pr-4 text-[13px] font-bold text-white outline-none focus:border-[#4ECDC4]/30 transition-all"
+                    className="w-full bg-white/[0.03] border border-white/5 rounded-xl py-3.5 pl-11 pr-11 text-[13px] font-bold text-white outline-none focus:border-[#4ECDC4]/30 transition-all"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowOldPassword(!showOldPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/60 transition-colors"
+                  >
+                    {showOldPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
                 </div>
               </div>
 
@@ -93,13 +103,20 @@ export default function ChangePasswordModal({ isOpen, onClose, isAdmin = false }
                 <div className="relative">
                   <Lock size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" />
                   <input
-                    type="password"
+                    type={showNewPassword ? "text" : "password"}
                     required
                     value={formData.newPassword}
                     onChange={(e) => setFormData({...formData, newPassword: e.target.value})}
                     placeholder="New password"
-                    className="w-full bg-white/[0.03] border border-white/5 rounded-xl py-3.5 pl-11 pr-4 text-[13px] font-bold text-white outline-none focus:border-[#4ECDC4]/30 transition-all"
+                    className="w-full bg-white/[0.03] border border-white/5 rounded-xl py-3.5 pl-11 pr-11 text-[13px] font-bold text-white outline-none focus:border-[#4ECDC4]/30 transition-all"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/60 transition-colors"
+                  >
+                    {showNewPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
                 </div>
               </div>
 
@@ -108,13 +125,20 @@ export default function ChangePasswordModal({ isOpen, onClose, isAdmin = false }
                 <div className="relative">
                   <Lock size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" />
                   <input
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     required
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
                     placeholder="Repeat new password"
-                    className="w-full bg-white/[0.03] border border-white/5 rounded-xl py-3.5 pl-11 pr-4 text-[13px] font-bold text-white outline-none focus:border-[#4ECDC4]/30 transition-all"
+                    className="w-full bg-white/[0.03] border border-white/5 rounded-xl py-3.5 pl-11 pr-11 text-[13px] font-bold text-white outline-none focus:border-[#4ECDC4]/30 transition-all"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/60 transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
                 </div>
               </div>
 

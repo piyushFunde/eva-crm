@@ -18,6 +18,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [loginMode, setLoginMode] = useState('admin'); // 'admin' or 'executive'
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm({
     resolver: zodResolver(loginSchema),
@@ -166,12 +167,19 @@ export default function Login() {
                       <Lock size={18} />
                     </div>
                     <input
-                      type="password"
+                      type={showLoginPassword ? "text" : "password"}
                       placeholder=""
                       autoComplete="new-password"
                       className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl py-4 pl-14 pr-12 text-sm font-bold text-[#0F1923] outline-none focus:border-[#4ECDC4] focus:bg-white transition-all shadow-sm"
                       {...register('password')}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowLoginPassword(!showLoginPassword)}
+                      className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#4ECDC4] transition-colors"
+                    >
+                      {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
                   </div>
                   {errors.password && <p className="text-red-500 text-[10px] font-bold ml-1">{errors.password.message}</p>}
                 </motion.div>

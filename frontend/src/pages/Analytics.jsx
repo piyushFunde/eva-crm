@@ -209,7 +209,7 @@ export default function Analytics() {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} className="drop-shadow-lg" />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip content={<PaymentModeTooltip />} />
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -221,9 +221,10 @@ export default function Analytics() {
           </div>
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-3 mt-6">
             {paymentModes.map((m, i) => (
-              <div key={i} className="flex items-center gap-2">
+              <div key={i} className="flex items-center gap-2 bg-white/[0.02] border border-white/5 px-3 py-1.5 rounded-lg hover:bg-white/[0.05] hover:border-white/10 transition-all">
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">{m.name}</span>
+                <span className="text-[9px] font-black text-white/60 uppercase tracking-widest">{m.name}</span>
+                <span className="text-[9px] font-black text-[#4ECDC4] ml-1">{m.value}</span>
               </div>
             ))}
           </div>
@@ -341,5 +342,25 @@ function ExportBtn({ onClick, icon, label, sub, disabled, activeColor }) {
       <ChevronRight size={16} className="text-white/10 group-hover:text-inherit transition-colors" />
     </button>
   );
+}
+
+function PaymentModeTooltip({ active, payload }) {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-[#0F1923]/95 backdrop-blur-md border border-white/10 rounded-2xl p-4 shadow-2xl flex items-center gap-3">
+        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: payload[0].color || '#4ECDC4' }} />
+        <div className="flex flex-col">
+          <span className="text-[10px] font-black text-white/40 uppercase tracking-widest leading-none mb-1">
+            {data.name}
+          </span>
+          <span className="text-sm font-black text-white leading-none">
+            {data.value} {data.value === 1 ? 'Collection' : 'Collections'}
+          </span>
+        </div>
+      </div>
+    );
+  }
+  return null;
 }
 
