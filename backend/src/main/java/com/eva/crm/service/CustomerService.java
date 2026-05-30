@@ -41,6 +41,7 @@ public class CustomerService {
         return customers.map(this::mapToDTO);
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = "analytics", allEntries = true)
     public void deleteCustomer(Long id) {
         customerRepository.deleteById(id);
     }

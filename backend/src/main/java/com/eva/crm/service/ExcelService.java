@@ -40,6 +40,7 @@ public class ExcelService {
     private final DataFormatter dataFormatter = new DataFormatter();
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "analytics", allEntries = true)
     public com.eva.crm.dto.UploadResponseDTO processExcelFile(MultipartFile file) {
         byte[] bytes;
         try {

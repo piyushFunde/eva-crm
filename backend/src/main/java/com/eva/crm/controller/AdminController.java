@@ -79,6 +79,7 @@ public class AdminController {
     /** Delete ALL customers (and their collection logs) in one go */
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/customers/all")
+    @org.springframework.cache.annotation.CacheEvict(value = "analytics", allEntries = true)
     public ResponseEntity<ApiResponse<String>> deleteAllCustomers() {
         try {
             long total = customerRepository.count();
@@ -94,6 +95,7 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/customers/pending")
     @org.springframework.transaction.annotation.Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "analytics", allEntries = true)
     public ResponseEntity<ApiResponse<String>> deletePendingCustomers() {
         try {
             int deleted = customerRepository.deleteByStatus("PENDING");

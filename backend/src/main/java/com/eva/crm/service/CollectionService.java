@@ -33,6 +33,7 @@ public class CollectionService {
     private final String UPLOAD_DIR = "uploads/receipts/";
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "analytics", allEntries = true)
     public void recordCollection(CollectionRequestDTO request, User executive) throws IOException {
         // Idempotency check
         if (request.getClientGeneratedId() != null && 
@@ -153,6 +154,7 @@ public class CollectionService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "analytics", allEntries = true)
     public void deleteCollection(Long collectionId) {
         CollectionLog log = collectionLogRepository.findById(collectionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Collection record not found"));
