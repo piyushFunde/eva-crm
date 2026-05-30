@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import { 
   TrendingUp, Users, IndianRupee, Download, Calendar, 
-  AlertTriangle, CreditCard, ChevronRight, FileText, FileSpreadsheet, Loader2, Activity, Filter, Clock
+  AlertTriangle, CreditCard, ChevronRight, FileText, FileSpreadsheet, Loader2, Activity, Filter, Clock, CheckCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -76,6 +76,31 @@ export default function Analytics() {
       </div>
     );
   }
+
+  const chartData = (() => {
+    if (!trend || trend.length === 0) return [];
+    if (trend.length === 1) {
+      const singlePoint = trend[0];
+      try {
+        const d = new Date(singlePoint.date);
+        if (!isNaN(d.getTime())) {
+          d.setDate(d.getDate() - 1);
+          const prevDateStr = d.toISOString().split('T')[0];
+          return [
+            { date: prevDateStr, amount: 0 },
+            singlePoint
+          ];
+        }
+      } catch (e) {
+        console.error('Failed to pad trend data', e);
+      }
+      return [
+        { date: 'Previous', amount: 0 },
+        singlePoint
+      ];
+    }
+    return trend;
+  })();
 
   return (
     <div className="min-h-screen bg-[#0F1923] px-5 py-8 space-y-8 max-w-7xl mx-auto w-full pb-32">
@@ -155,31 +180,43 @@ export default function Analytics() {
               <Activity size={18} />
             </div>
           </div>
-          <div className="flex-1 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trend}>
-                <defs>
-                  <linearGradient id="colorTrend" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4ECDC4" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#4ECDC4" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="date" hide />
-                <YAxis hide />
-                <Tooltip 
-                  contentStyle={{ 
-                    background: 'rgba(15, 25, 35, 0.9)', 
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255,255,255,0.1)', 
-                    borderRadius: '16px', 
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
-                    padding: '12px'
-                  }}
-                  itemStyle={{ color: '#4ECDC4', fontWeight: '900', fontSize: '14px' }}
-                />
-                <Area type="monotone" dataKey="amount" stroke="#4ECDC4" strokeWidth={4} fillOpacity={1} fill="url(#colorTrend)" />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="flex-1 w-full flex items-center justify-center">
+            {chartData.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center py-10">
+                <div className="w-12 h-12 rounded-full bg-[#4ECDC4]/10 border border-[#4ECDC4]/20 flex items-center justify-center text-[#4ECDC4] mb-3">
+                  <Activity size={20} />
+                </div>
+                <h4 className="text-xs font-black text-white uppercase tracking-widest">No Liquidity Data</h4>
+                <p className="text-[10px] font-bold text-white/20 uppercase mt-1 tracking-wider">
+                  Select a different range or check back later
+                </p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="colorTrend" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#4ECDC4" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#4ECDC4" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="date" hide />
+                  <YAxis hide />
+                  <Tooltip 
+                    contentStyle={{ 
+                      background: 'rgba(15, 25, 35, 0.9)', 
+                      backdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255,255,255,0.1)', 
+                      borderRadius: '16px', 
+                      boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                      padding: '12px'
+                    }}
+                    itemStyle={{ color: '#4ECDC4', fontWeight: '900', fontSize: '14px' }}
+                  />
+                  <Area type="monotone" dataKey="amount" stroke="#4ECDC4" strokeWidth={4} fillOpacity={1} fill="url(#colorTrend)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -194,40 +231,56 @@ export default function Analytics() {
               <CreditCard size={18} />
             </div>
           </div>
-          <div className="flex-1 w-full relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={paymentModes}
-                  innerRadius={75}
-                  outerRadius={95}
-                  paddingAngle={12}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {paymentModes.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} className="drop-shadow-lg" />
-                  ))}
-                </Pie>
-                <Tooltip content={<PaymentModeTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-               <div className="text-center">
-                  <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">Methods</p>
-                  <p className="text-xl font-black text-white">{paymentModes.length}</p>
-               </div>
-            </div>
-          </div>
-          <div className="flex flex-wrap justify-center gap-x-6 gap-y-3 mt-6">
-            {paymentModes.map((m, i) => (
-              <div key={i} className="flex items-center gap-2 bg-white/[0.02] border border-white/5 px-3 py-1.5 rounded-lg hover:bg-white/[0.05] hover:border-white/10 transition-all">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                <span className="text-[9px] font-black text-white/60 uppercase tracking-widest">{m.name}</span>
-                <span className="text-[9px] font-black text-[#4ECDC4] ml-1">{m.value}</span>
+          <div className="flex-1 w-full relative flex items-center justify-center">
+            {paymentModes.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center py-10">
+                <div className="w-12 h-12 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-white/20 mb-3">
+                  <CreditCard size={20} />
+                </div>
+                <h4 className="text-xs font-black text-white uppercase tracking-widest">No Payment Channels</h4>
+                <p className="text-[10px] font-bold text-white/20 uppercase mt-1 tracking-wider">
+                  No records to distribute
+                </p>
               </div>
-            ))}
+            ) : (
+              <>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={paymentModes}
+                      innerRadius={75}
+                      outerRadius={95}
+                      paddingAngle={12}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {paymentModes.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} className="drop-shadow-lg" />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<PaymentModeTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                   <div className="text-center">
+                      <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">Methods</p>
+                      <p className="text-xl font-black text-white">{paymentModes.length}</p>
+                   </div>
+                </div>
+              </>
+            )}
           </div>
+          {paymentModes.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-x-6 gap-y-3 mt-6">
+              {paymentModes.map((m, i) => (
+                <div key={i} className="flex items-center gap-2 bg-white/[0.02] border border-white/5 px-3 py-1.5 rounded-lg hover:bg-white/[0.05] hover:border-white/10 transition-all">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                  <span className="text-[9px] font-black text-white/60 uppercase tracking-widest">{m.name}</span>
+                  <span className="text-[9px] font-black text-[#4ECDC4] ml-1">{m.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -245,23 +298,35 @@ export default function Analytics() {
              </div>
           </div>
           <div className="space-y-4">
-            {highRisk.slice(0, 5).map((c, i) => (
-              <div key={i} className="flex items-center justify-between p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-[#EF4444]/20 transition-all group">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500 text-base font-black border border-red-500/10">
-                    {c.name[0]}
-                  </div>
-                  <div>
-                    <p className="text-[16px] font-black text-white tracking-tight">{c.name}</p>
-                    <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mt-1 group-hover:text-[#EF4444]/60 transition-colors">{c.phone}</p>
-                  </div>
+            {highRisk.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center bg-white/[0.01] border border-white/5 rounded-2xl">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-4 animate-pulse">
+                  <CheckCircle size={24} />
                 </div>
-                <div className="text-right">
-                  <p className="text-[18px] font-black text-[#EF4444] tracking-tighter">{formatCurrency(c.emiAmount)}</p>
-                  <p className="text-[9px] font-black text-white/10 uppercase tracking-widest mt-1">Pending Balance</p>
-                </div>
+                <h4 className="text-xs font-black text-white uppercase tracking-widest">No Risk Exposure</h4>
+                <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider mt-2 max-w-xs px-4">
+                  All active accounts are current. There are no high-value defaults flagged.
+                </p>
               </div>
-            ))}
+            ) : (
+              highRisk.slice(0, 5).map((c, i) => (
+                <div key={i} className="flex items-center justify-between p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-[#EF4444]/20 transition-all group">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500 text-base font-black border border-red-500/10">
+                      {c.name[0]}
+                    </div>
+                    <div>
+                      <p className="text-[16px] font-black text-white tracking-tight">{c.name}</p>
+                      <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mt-1 group-hover:text-[#EF4444]/60 transition-colors">{c.phone}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[18px] font-black text-[#EF4444] tracking-tighter">{formatCurrency(c.emiAmount)}</p>
+                    <p className="text-[9px] font-black text-white/10 uppercase tracking-widest mt-1">Pending Balance</p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

@@ -8,6 +8,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
 import useAuthStore from '@/store/authStore';
 import useDashboardStore from '@/store/dashboardStore';
+import useHistoryStore from '@/store/historyStore';
 import useNetworkStore from '@/offline/networkManager';
 import { formatCurrency } from '@/utils/formatters';
 import { db } from '@/offline/db';
@@ -15,6 +16,7 @@ import { db } from '@/offline/db';
 export default function Dashboard() {
   const { user } = useAuthStore();
   const { stats, fetchDashboardStats, isLoading } = useDashboardStore();
+  const { history, fetchHistory } = useHistoryStore();
   const { isOnline } = useNetworkStore();
   const navigate = useNavigate();
   
@@ -25,6 +27,7 @@ export default function Dashboard() {
         if (result?.success) {
           await db.dashboardCache.put({ key: 'stats', data: result.data, timestamp: Date.now() });
         }
+        fetchHistory(isAdmin, 0, false);
       } else {
         const cached = await db.dashboardCache.get('stats');
         if (cached) {
@@ -33,7 +36,7 @@ export default function Dashboard() {
       }
     };
     loadData();
-  }, [fetchDashboardStats, isOnline]);
+  }, [fetchDashboardStats, fetchHistory, isOnline, isAdmin]);
 
   const isAdmin = user?.role === 'ROLE_ADMIN' || user?.role === 'ADMIN';
   // Admin always shows 'Administrator' - never show DB names like 'System'
@@ -204,13 +207,41 @@ export default function Dashboard() {
           <button onClick={() => navigate('/collection-history')} className="text-[10px] font-black text-[#4ECDC4] uppercase tracking-widest hover:opacity-80">View All</button>
         </div>
         
-        <div className="glass-card !py-12 border-dashed border-white/10 flex flex-col items-center text-center">
-          <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-5">
-            <Users className="w-7 h-7 text-white/10" />
+        {history.length === 0 ? (
+          <div className="glass-card !py-8 border-dashed border-white/10 flex flex-col items-center text-center">
+            <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mb-3">
+              <Users className="w-5 h-5 text-white/20" />
+            </div>
+            <p className="text-xs font-bold text-white/40">No collections recorded yet</p>
+            <p className="text-[10px] font-medium text-white/20 mt-1 uppercase tracking-widest">Activity will appear here in real-time</p>
           </div>
-          <p className="text-sm font-bold text-white/40">No collections recorded today</p>
-          <p className="text-[11px] font-medium text-white/20 mt-2 uppercase tracking-widest">Your activity will appear here in real-time</p>
-        </div>
+        ) : (
+          <div className="space-y-3">
+            {history.slice(0, 3).map((record) => (
+              <div 
+                key={record.id}
+                onClick={() => navigate('/collection-history')}
+                className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-[#4ECDC4]/20 transition-all cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#4ECDC4]/10 flex items-center justify-center text-[#4ECDC4] font-black border border-[#4ECDC4]/10 text-sm">
+                    {record.customerName ? record.customerName[0] : '?'}
+                  </div>
+                  <div>
+                    <p className="text-[14px] font-black text-white tracking-tight">{record.customerName}</p>
+                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mt-0.5">
+                      {new Date(record.collectedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} • {record.paymentMode}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-[15px] font-black text-[#22C55E] tracking-tighter">{formatCurrency(record.amountCollected)}</p>
+                  <p className="text-[9px] font-black text-white/10 uppercase tracking-widest mt-0.5">Collected</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );
