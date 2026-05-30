@@ -161,12 +161,11 @@ export default function MyList() {
                       </div>
                       <div className="text-right">
                         <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] mb-1">Deadline</p>
-                        <div className={`flex items-center gap-1.5 justify-end font-black uppercase text-[11px] ${
+                        <div className={`flex flex-col items-end font-black uppercase text-[11px] ${
                           overdue ? 'text-[#EF4444]' : dueToday ? 'text-[#F59E0B]' : 'text-[#4ECDC4]'
                         }`}>
-                          <p>
-                            {dueToday ? 'Due Today' : overdue ? 'Delayed' : formatDate(customer.dueDate)}
-                          </p>
+                          <span>{dueToday ? 'Due Today' : overdue ? 'Delayed' : 'Upcoming'}</span>
+                          <span className="text-[10px] text-white/40 font-bold normal-case mt-0.5">{formatDate(customer.dueDate)}</span>
                         </div>
                       </div>
                     </div>
