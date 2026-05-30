@@ -20,6 +20,8 @@ export default function Dashboard() {
   const { isOnline } = useNetworkStore();
   const navigate = useNavigate();
   
+  const isAdmin = user?.role === 'ROLE_ADMIN' || user?.role === 'ADMIN';
+  
   useEffect(() => {
     const loadData = async () => {
       if (isOnline) {
@@ -38,7 +40,6 @@ export default function Dashboard() {
     loadData();
   }, [fetchDashboardStats, fetchHistory, isOnline, isAdmin]);
 
-  const isAdmin = user?.role === 'ROLE_ADMIN' || user?.role === 'ADMIN';
   // Admin always shows 'Administrator' - never show DB names like 'System'
   const firstName = isAdmin
     ? 'Administrator'
