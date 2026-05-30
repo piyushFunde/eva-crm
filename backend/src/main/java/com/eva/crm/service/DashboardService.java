@@ -29,25 +29,26 @@ public class DashboardService {
         BigDecimal collected = collectionLogRepository.sumAmountCollectedTodayByExecutive(executive.getId(), startOfDay);
         if (collected == null) collected = BigDecimal.ZERO;
 
-        // Target = sum of all PENDING customers assigned to this executive
-        // whose dueDate is on or before today (includes overdue from previous days)
+        List<Long> activeTodayCustomerIds = collectionLogRepository.findCustomerIdsWithCollectionsTodayByExecutive(executive.getId(), startOfDay);
+
         List<Customer> allAssigned = customerRepository.findAll();
-        BigDecimal target = BigDecimal.ZERO;
+        BigDecimal pending = BigDecimal.ZERO;
         long assignedCount = 0;
 
         for (Customer c : allAssigned) {
             if (c.getAssignedExecutive() != null
                     && c.getAssignedExecutive().getId().equals(executive.getId())
-                    && !c.getDueDate().isAfter(LocalDate.now())  // dueDate <= today
-                    && "PENDING".equalsIgnoreCase(c.getStatus())) {
-                target = target.add(c.getEmiAmount());
-                assignedCount++;
+                    && !c.getDueDate().isAfter(LocalDate.now())) {
+                if (!"COMPLETED".equalsIgnoreCase(c.getStatus())) {
+                    pending = pending.add(c.getEmiAmount());
+                    assignedCount++;
+                } else if (activeTodayCustomerIds.contains(c.getId())) {
+                    assignedCount++;
+                }
             }
         }
 
-        BigDecimal pending = target.subtract(collected);
-        if (pending.compareTo(BigDecimal.ZERO) < 0) pending = BigDecimal.ZERO;
-
+        BigDecimal target = collected.add(pending);
         long collectedCount = collectionLogRepository.countCollectedTodayByExecutive(executive.getId(), startOfDay);
 
         return DashboardResponseDTO.builder()
@@ -65,21 +66,24 @@ public class DashboardService {
         BigDecimal collected = collectionLogRepository.sumAmountCollectedToday(startOfDay);
         if (collected == null) collected = BigDecimal.ZERO;
 
-        // Target = sum of all PENDING customers with dueDate <= today (includes overdue)
+        List<Long> activeTodayCustomerIds = collectionLogRepository.findCustomerIdsWithCollectionsToday(startOfDay);
+
         List<Customer> allCustomers = customerRepository.findAll();
-        BigDecimal target = BigDecimal.ZERO;
+        BigDecimal pending = BigDecimal.ZERO;
         long totalPending = 0;
 
         for (Customer c : allCustomers) {
-            if (!c.getDueDate().isAfter(LocalDate.now())
-                    && "PENDING".equalsIgnoreCase(c.getStatus())) {
-                target = target.add(c.getEmiAmount());
-                totalPending++;
+            if (!c.getDueDate().isAfter(LocalDate.now())) {
+                if (!"COMPLETED".equalsIgnoreCase(c.getStatus())) {
+                    pending = pending.add(c.getEmiAmount());
+                    totalPending++;
+                } else if (activeTodayCustomerIds.contains(c.getId())) {
+                    totalPending++;
+                }
             }
         }
 
-        BigDecimal pending = target.subtract(collected);
-        if (pending.compareTo(BigDecimal.ZERO) < 0) pending = BigDecimal.ZERO;
+        BigDecimal target = collected.add(pending);
 
         return DashboardResponseDTO.builder()
                 .todayTarget(target)
@@ -99,19 +103,26 @@ public class DashboardService {
                 BigDecimal collected = collectionLogRepository.sumAmountCollectedTodayByExecutive(exec.getId(), startOfDay);
                 if (collected == null) collected = BigDecimal.ZERO;
 
+                List<Long> activeTodayCustomerIds = collectionLogRepository.findCustomerIdsWithCollectionsTodayByExecutive(exec.getId(), startOfDay);
+
                 List<Customer> allCustomers = customerRepository.findAll();
-                BigDecimal target = BigDecimal.ZERO;
+                BigDecimal pending = BigDecimal.ZERO;
                 long count = 0;
 
                 for (Customer c : allCustomers) {
                     if (c.getAssignedExecutive() != null
                             && c.getAssignedExecutive().getId().equals(exec.getId())
-                            && !c.getDueDate().isAfter(LocalDate.now())
-                            && "PENDING".equalsIgnoreCase(c.getStatus())) {
-                        count++;
-                        target = target.add(c.getEmiAmount());
+                            && !c.getDueDate().isAfter(LocalDate.now())) {
+                        if (!"COMPLETED".equalsIgnoreCase(c.getStatus())) {
+                            pending = pending.add(c.getEmiAmount());
+                            count++;
+                        } else if (activeTodayCustomerIds.contains(c.getId())) {
+                            count++;
+                        }
                     }
                 }
+
+                BigDecimal target = collected.add(pending);
 
                 return TeamPerformanceDTO.builder()
                         .executiveId(exec.getId())

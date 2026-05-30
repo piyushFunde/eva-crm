@@ -43,4 +43,10 @@ public interface CollectionLogRepository extends JpaRepository<CollectionLog, Lo
 
     @Query("SELECT c.paymentMode, COUNT(c) FROM CollectionLog c GROUP BY c.paymentMode")
     List<Object[]> getPaymentModeDistribution();
+
+    @Query("SELECT DISTINCT c.customer.id FROM CollectionLog c WHERE c.collectedAt >= :startOfDay")
+    List<Long> findCustomerIdsWithCollectionsToday(@Param("startOfDay") LocalDateTime startOfDay);
+
+    @Query("SELECT DISTINCT c.customer.id FROM CollectionLog c WHERE c.executive.id = :executiveId AND c.collectedAt >= :startOfDay")
+    List<Long> findCustomerIdsWithCollectionsTodayByExecutive(@Param("executiveId") Long executiveId, @Param("startOfDay") LocalDateTime startOfDay);
 }
