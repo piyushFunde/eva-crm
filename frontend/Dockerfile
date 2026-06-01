@@ -4,6 +4,16 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+# Declare Railway build arguments for Vite
+ARG VITE_API_URL
+ARG VITE_WS_URL
+ARG VITE_VAPID_PUBLIC_KEY
+
+# Set environment variables for the build command
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_WS_URL=$VITE_WS_URL
+ENV VITE_VAPID_PUBLIC_KEY=$VITE_VAPID_PUBLIC_KEY
+
 # Install dependencies first (better Docker caching)
 COPY package.json package-lock.json* ./
 RUN npm install
