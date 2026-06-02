@@ -103,6 +103,17 @@ public class AnalyticsService {
         return customerRepository.findHighRiskCustomers(cutoffDate, PageRequest.of(0, 10));
     }
 
+    public List<Map<String, Object>> debugCustomers() {
+        return customerRepository.findAll().stream().map(c -> {
+            Map<String, Object> map = new java.util.HashMap<>();
+            map.put("name", c.getName());
+            map.put("status", c.getStatus());
+            map.put("dueDate", c.getDueDate() != null ? c.getDueDate().toString() : "null");
+            map.put("emi", c.getEmiAmount());
+            return map;
+        }).collect(Collectors.toList());
+    }
+
     public List<Map<String, Object>> getExecutivePerformance() {
         List<User> executives = userRepository.findAll(); // Simplified filter for demo
         return executives.stream()
