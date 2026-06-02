@@ -41,11 +41,6 @@ public class AnalyticsController {
         return ResponseEntity.ok(ApiResponse.success("High risk customers fetched", analyticsService.getHighRiskCustomers()));
     }
 
-    @GetMapping("/debug-customers")
-    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> debugCustomers() {
-        return ResponseEntity.ok(ApiResponse.success("debug", analyticsService.debugCustomers()));
-    }
-
     @GetMapping("/performance")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getPerformance() {
         return ResponseEntity.ok(ApiResponse.success("Performance data fetched", analyticsService.getExecutivePerformance()));
