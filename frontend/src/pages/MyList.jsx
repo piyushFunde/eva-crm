@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Search, Phone, Wallet, Calendar, MapPin, Loader2, ClipboardCheck, ArrowRight, PhoneForwarded, Trash2 } from 'lucide-react';
+import { Search, Phone, Wallet, Calendar, MapPin, Loader2, ClipboardCheck, ArrowRight, PhoneForwarded, Trash2, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useCustomerStore from '@/store/customerStore';
 import useAuthStore from '@/store/authStore';
 import { toast } from 'sonner';
 import CollectionModal from '@/components/CollectionModal';
 import { formatCurrency, isToday, isOverdue, formatDate } from '@/utils/formatters';
+import api from '@/api/axios';
 
 const filterTabs = ['All', 'Pending', 'Collected'];
 
@@ -21,6 +22,21 @@ export default function MyList() {
   useEffect(() => {
     fetchCustomers(0, 100, search);
   }, [fetchCustomers, search]);
+
+  const handleRevokeLatestPayment = (customer) => {
+    api.delete(`/collections/customer/${customer.id}/latest`)
+      .then(res => {
+        if (res.success) {
+          toast.success(`Latest payment for ${customer.name} revoked successfully`);
+          fetchCustomers(0, 100, search);
+        } else {
+          toast.error(res.error || 'Failed to revoke payment');
+        }
+      })
+      .catch(err => {
+        toast.error(err.message || 'Error revoking payment');
+      });
+  };
 
   const filtered = customers.filter((c) => {
     const matchesSearch =
@@ -209,23 +225,40 @@ export default function MyList() {
                           {customer.status?.toUpperCase()}
                         </div>
                         {useAuthStore.getState().isAdmin() && (
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (confirm(`Delete lead: ${customer.name}? This will remove them from the system.`)) {
-                                useCustomerStore.getState().deleteCustomer(customer.id).then(res => {
-                                  if (res?.success) {
-                                    toast.success('Lead removed successfully');
-                                  } else {
-                                    toast.error('Failed to remove lead: ' + (res?.error || 'Unknown error'));
+                          <div className="flex gap-2">
+                            {(customer.status?.toLowerCase() === 'completed' || customer.status?.toLowerCase() === 'collected' || customer.status?.toLowerCase() === 'partial') && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (confirm(`Revoke latest payment for: ${customer.name}? This will restore their previous balance.`)) {
+                                    handleRevokeLatestPayment(customer);
                                   }
-                                });
-                              }
-                            }}
-                            className="w-8 h-8 flex items-center justify-center bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-all"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                                }}
+                                className="w-8 h-8 flex items-center justify-center bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition-all"
+                                title="Revoke latest payment"
+                              >
+                                <RotateCcw size={14} />
+                              </button>
+                            )}
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm(`Delete lead: ${customer.name}? This will remove them from the system.`)) {
+                                  useCustomerStore.getState().deleteCustomer(customer.id).then(res => {
+                                    if (res?.success) {
+                                      toast.success('Lead removed successfully');
+                                    } else {
+                                      toast.error('Failed to remove lead: ' + (res?.error || 'Unknown error'));
+                                    }
+                                  });
+                                }
+                              }}
+                              className="w-8 h-8 flex items-center justify-center bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-all"
+                              title="Delete customer entirely"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -271,13 +304,27 @@ export default function MyList() {
                         </button>
                       </div>
                     ) : (
-                      <div className="flex items-center justify-center gap-2 py-4 bg-[#22C55E]/5 rounded-xl border border-[#22C55E]/10">
-                        <div className="w-6 h-6 rounded-full bg-[#22C55E] flex items-center justify-center shadow-[0_0_12px_rgba(34,197,94,0.3)]">
-                          <svg viewBox="0 0 10 8" className="w-3 h-3" fill="none">
-                            <path d="M1 4l2.5 2.5L9 1" stroke="#0F1923" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
+                      <div className="flex items-center justify-between gap-2 py-3 px-4 bg-[#22C55E]/5 rounded-xl border border-[#22C55E]/10">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-[#22C55E] flex items-center justify-center shadow-[0_0_12px_rgba(34,197,94,0.3)]">
+                            <svg viewBox="0 0 10 8" className="w-3 h-3" fill="none">
+                              <path d="M1 4l2.5 2.5L9 1" stroke="#0F1923" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </div>
+                          <span className="text-[10px] font-black text-[#22C55E] uppercase tracking-[0.2em]">Closed Account</span>
                         </div>
-                        <span className="text-[10px] font-black text-[#22C55E] uppercase tracking-[0.2em]">Closed Account</span>
+                        {useAuthStore.getState().isAdmin() && (
+                          <button
+                            onClick={() => {
+                              if (confirm(`Revoke latest payment for: ${customer.name}? This will restore their previous balance.`)) {
+                                handleRevokeLatestPayment(customer);
+                              }
+                            }}
+                            className="px-3 py-1.5 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 text-[9px] font-black uppercase tracking-wider transition-all"
+                          >
+                            Revoke Payment
+                          </button>
+                        )}
                       </div>
                     )}
                   </motion.div>

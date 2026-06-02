@@ -190,4 +190,15 @@ public class CollectionService {
 
         collectionLogRepository.delete(log);
     }
+
+    @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "analytics", allEntries = true)
+    public void deleteLatestCollectionForCustomer(Long customerId) {
+        java.util.List<CollectionLog> logs = collectionLogRepository.findByCustomerIdOrderByCollectedAtDesc(customerId);
+        if (logs.isEmpty()) {
+            throw new ResourceNotFoundException("No collection records found for this customer");
+        }
+        CollectionLog latestLog = logs.get(0);
+        deleteCollection(latestLog.getId());
+    }
 }

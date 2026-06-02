@@ -69,4 +69,11 @@ public class CollectionController {
         collectionService.deleteCollection(id);
         return ResponseEntity.ok(ApiResponse.success("Collection deleted and customer state reverted", null));
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/customer/{customerId}/latest")
+    public ResponseEntity<ApiResponse<Void>> deleteLatestCollectionForCustomer(@PathVariable Long customerId) {
+        collectionService.deleteLatestCollectionForCustomer(customerId);
+        return ResponseEntity.ok(ApiResponse.success("Latest collection reverted successfully", null));
+    }
 }
