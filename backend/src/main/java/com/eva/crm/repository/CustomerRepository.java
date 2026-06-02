@@ -17,8 +17,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
     @Query("SELECT SUM(c.emiAmount) FROM Customer c")
     BigDecimal sumTotalPendingAmount();
 
-    @Query("SELECT c FROM Customer c WHERE c.emiAmount > 10000 AND c.status != 'COMPLETED' ORDER BY c.emiAmount DESC")
-    List<Customer> findHighRiskCustomers(Pageable pageable);
+    @Query("SELECT c FROM Customer c WHERE c.status != 'COMPLETED' AND c.dueDate <= :cutoffDate ORDER BY c.emiAmount DESC")
+    List<Customer> findHighRiskCustomers(@org.springframework.data.repository.query.Param("cutoffDate") java.time.LocalDate cutoffDate, Pageable pageable);
 
     @org.springframework.data.jpa.repository.Modifying
     @Query("DELETE FROM Customer c WHERE c.status = :status")

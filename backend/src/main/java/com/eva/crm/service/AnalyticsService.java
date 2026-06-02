@@ -99,7 +99,8 @@ public class AnalyticsService {
     }
 
     public List<Customer> getHighRiskCustomers() {
-        return customerRepository.findHighRiskCustomers(PageRequest.of(0, 10));
+        java.time.LocalDate cutoffDate = java.time.LocalDate.now().minusDays(2);
+        return customerRepository.findHighRiskCustomers(cutoffDate, PageRequest.of(0, 10));
     }
 
     public List<Map<String, Object>> getExecutivePerformance() {
