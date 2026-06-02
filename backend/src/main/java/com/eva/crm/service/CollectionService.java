@@ -85,12 +85,20 @@ public class CollectionService {
         messagingTemplate.convertAndSend("/topic/collections", mapToDTO(log));
     }
 
-    public Page<CollectionHistoryDTO> getAllCollections(int page, int size) {
+    public Page<CollectionHistoryDTO> getAllCollections(int page, int size, String search) {
+        if (search != null && !search.trim().isEmpty()) {
+            return collectionLogRepository.searchAllCollections(search.trim(), PageRequest.of(page, size))
+                    .map(this::mapToDTO);
+        }
         return collectionLogRepository.findAllByOrderByCollectedAtDesc(PageRequest.of(page, size))
                 .map(this::mapToDTO);
     }
 
-    public Page<CollectionHistoryDTO> getExecutiveCollections(User executive, int page, int size) {
+    public Page<CollectionHistoryDTO> getExecutiveCollections(User executive, int page, int size, String search) {
+        if (search != null && !search.trim().isEmpty()) {
+            return collectionLogRepository.searchExecutiveCollections(executive.getId(), search.trim(), PageRequest.of(page, size))
+                    .map(this::mapToDTO);
+        }
         return collectionLogRepository.findByExecutiveIdOrderByCollectedAtDesc(executive.getId(), PageRequest.of(page, size))
                 .map(this::mapToDTO);
     }

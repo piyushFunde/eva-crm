@@ -13,6 +13,8 @@ export default function MyList() {
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [sortBy, setSortBy] = useState('nameAsc');
+  const [selectedDate, setSelectedDate] = useState('');
   
   const { customers, fetchCustomers, isLoading } = useCustomerStore();
 
@@ -25,11 +27,50 @@ export default function MyList() {
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.phone.includes(search) ||
       c.address.toLowerCase().includes(search.toLowerCase());
+      
     const matchesFilter =
       activeFilter === 'All' || 
-      (activeFilter === 'Collected' ? c.status?.toLowerCase() === 'completed' : c.status?.toLowerCase() === activeFilter.toLowerCase());
-    return matchesSearch && matchesFilter;
+      (activeFilter === 'Collected' 
+        ? (c.status?.toLowerCase() === 'completed' || c.status?.toLowerCase() === 'collected') 
+        : (c.status?.toLowerCase() === 'pending' || c.status?.toLowerCase() === 'partial'));
+        
+    let matchesDate = true;
+    if (selectedDate) {
+      if (!c.dueDate) {
+        matchesDate = false;
+      } else {
+        try {
+          const cDateStr = typeof c.dueDate === 'string' ? c.dueDate.substring(0, 10) : new Date(c.dueDate).toISOString().substring(0, 10);
+          matchesDate = cDateStr === selectedDate;
+        } catch (err) {
+          matchesDate = false;
+        }
+      }
+    }
+    
+    return matchesSearch && matchesFilter && matchesDate;
   });
+
+  const sorted = [...filtered].sort((a, b) => {
+    if (sortBy === 'nameAsc') {
+      return (a.name || '').localeCompare(b.name || '');
+    }
+    if (sortBy === 'nameDesc') {
+      return (b.name || '').localeCompare(a.name || '');
+    }
+    if (sortBy === 'dueDateAsc') {
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate) - new Date(b.dueDate);
+    }
+    if (sortBy === 'dueDateDesc') {
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(b.dueDate) - new Date(a.dueDate);
+    }
+    return 0;
+  });
+
 
   return (
     <div className="min-h-screen bg-[#0F1923] pb-32">
@@ -53,22 +94,63 @@ export default function MyList() {
           </div>
           <div className="text-right">
              <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">Active Route</p>
-             <p className="text-sm font-black text-[#4ECDC4] tracking-tighter">{filtered.length} Leads</p>
+             <p className="text-sm font-black text-[#4ECDC4] tracking-tighter">{sorted.length} Leads</p>
           </div>
         </div>
 
-        {/* Dynamic Search */}
-        <div className="relative group max-w-md mx-auto">
-          <div className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#4ECDC4] transition-all duration-300">
-            <Search size={20} />
+        {/* Filters and Search Bar */}
+        <div className="flex flex-col md:flex-row gap-4 max-w-4xl mx-auto items-stretch">
+          {/* Dynamic Search */}
+          <div className="relative group flex-1">
+            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#4ECDC4] transition-all duration-300">
+              <Search size={20} />
+            </div>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by Name, ID or Locality..."
+              className="w-full bg-white/[0.03] border border-white/5 rounded-2xl py-4 pl-14 pr-6 text-[14px] font-bold text-white placeholder:text-white/20 outline-none focus:bg-white/[0.06] focus:border-[#4ECDC4]/50 focus:shadow-[0_0_20px_rgba(78,205,196,0.1)] transition-all duration-500"
+            />
           </div>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by Name, ID or Locality..."
-            className="w-full bg-white/[0.03] border border-white/5 rounded-2xl py-4.5 pl-14 pr-6 text-[14px] font-bold text-white placeholder:text-white/20 outline-none focus:bg-white/[0.06] focus:border-[#4ECDC4]/50 focus:shadow-[0_0_20px_rgba(78,205,196,0.1)] transition-all duration-500"
-          />
+
+          <div className="flex gap-3">
+            {/* Date Selector */}
+            <div className="relative flex-1 md:w-48 bg-white/[0.03] border border-white/5 rounded-2xl flex items-center px-4 hover:border-white/10 transition-all min-h-[48px]">
+              <Calendar size={18} className="text-white/40 mr-2 flex-shrink-0" />
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="bg-transparent border-none text-white text-[13px] font-bold outline-none w-full [color-scheme:dark] cursor-pointer"
+              />
+              {selectedDate && (
+                <button
+                  onClick={() => setSelectedDate('')}
+                  className="text-white/40 hover:text-white ml-2 text-xs font-black uppercase tracking-wider"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {/* Sort Dropdown */}
+            <div className="relative flex-1 md:w-52 bg-white/[0.03] border border-white/5 rounded-2xl flex items-center px-4 hover:border-white/10 transition-all min-h-[48px]">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-transparent border-none text-white text-[13px] font-bold outline-none w-full appearance-none cursor-pointer [color-scheme:dark] pr-8"
+              >
+                <option value="nameAsc" className="bg-[#0F1923]">Name: A to Z</option>
+                <option value="nameDesc" className="bg-[#0F1923]">Name: Z to A</option>
+                <option value="dueDateAsc" className="bg-[#0F1923]">Date: Oldest Due</option>
+                <option value="dueDateDesc" className="bg-[#0F1923]">Date: Newest Due</option>
+              </select>
+              <div className="pointer-events-none absolute right-4 text-white/40 text-[10px]">
+                ▼
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -79,7 +161,7 @@ export default function MyList() {
             <Loader2 className="w-10 h-10 animate-spin text-[#4ECDC4] opacity-50" />
             <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">Syncing Records...</p>
           </div>
-        ) : filtered.length === 0 ? (
+        ) : sorted.length === 0 ? (
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
@@ -91,7 +173,7 @@ export default function MyList() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             <AnimatePresence mode='popLayout'>
-              {filtered.map((customer, i) => {
+              {sorted.map((customer, i) => {
                 const overdue = isOverdue(customer.dueDate);
                 const dueToday = isToday(customer.dueDate);
 
@@ -208,7 +290,7 @@ export default function MyList() {
 
       {/* ── Floating Stats Overlay (Premium Touch) ────────── */}
       <AnimatePresence>
-        {filtered.length > 0 && (
+        {sorted.length > 0 && (
           <motion.div 
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -218,13 +300,13 @@ export default function MyList() {
                 <div className="flex flex-col items-center">
                    <p className="text-[8px] font-black text-white/30 uppercase">Total Value</p>
                    <p className="text-xs font-black text-white tracking-tighter">
-                      {formatCurrency(filtered.reduce((acc, c) => acc + c.emiAmount, 0))}
+                      {formatCurrency(sorted.reduce((acc, c) => acc + c.emiAmount, 0))}
                    </p>
                 </div>
                 <div className="w-px h-6 bg-white/10" />
                 <div className="flex flex-col items-center">
                    <p className="text-[8px] font-black text-white/30 uppercase">Selection</p>
-                   <p className="text-xs font-black text-[#4ECDC4] tracking-tighter">{filtered.length}</p>
+                   <p className="text-xs font-black text-[#4ECDC4] tracking-tighter">{sorted.length}</p>
                 </div>
              </div>
           </motion.div>

@@ -15,19 +15,20 @@ export default function CollectionHistory() {
   const [selectedRecord, setSelectedRecord] = useState(null);
 
   useEffect(() => {
-    fetchHistory(isAdmin(), 0, false);
-  }, [fetchHistory, isAdmin]);
+    const delayDebounceFn = setTimeout(() => {
+      fetchHistory(isAdmin(), 0, false, search);
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [fetchHistory, isAdmin, search]);
 
   const loadMore = () => {
     if (!isLoading && hasMore) {
-      fetchHistory(isAdmin(), page + 1, true);
+      fetchHistory(isAdmin(), page + 1, true, search);
     }
   };
 
-  const filteredHistory = history.filter(item => 
-    item.customerName?.toLowerCase().includes(search.toLowerCase()) ||
-    item.customerPhone?.includes(search)
-  );
+  const filteredHistory = history;
 
   return (
     <div className="min-h-screen bg-[#0F1923] px-5 py-8 space-y-8 max-w-7xl mx-auto w-full pb-32">

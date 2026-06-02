@@ -20,6 +20,18 @@ public interface CollectionLogRepository extends JpaRepository<CollectionLog, Lo
     
     Page<CollectionLog> findAllByOrderByCollectedAtDesc(Pageable pageable);
 
+    @Query("SELECT c FROM CollectionLog c WHERE " +
+           "LOWER(c.customer.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "c.customer.phone LIKE CONCAT('%', :search, '%') " +
+           "ORDER BY c.collectedAt DESC")
+    Page<CollectionLog> searchAllCollections(@Param("search") String search, Pageable pageable);
+
+    @Query("SELECT c FROM CollectionLog c WHERE c.executive.id = :executiveId AND (" +
+           "LOWER(c.customer.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "c.customer.phone LIKE CONCAT('%', :search, '%')) " +
+           "ORDER BY c.collectedAt DESC")
+    Page<CollectionLog> searchExecutiveCollections(@Param("executiveId") Long executiveId, @Param("search") String search, Pageable pageable);
+
     @Query("SELECT SUM(c.amountCollected) FROM CollectionLog c WHERE c.collectedAt >= :startOfDay")
     BigDecimal sumAmountCollectedToday(@Param("startOfDay") LocalDateTime startOfDay);
 

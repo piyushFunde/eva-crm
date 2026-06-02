@@ -8,12 +8,12 @@ const useHistoryStore = create((set, get) => ({
   page: 0,
   hasMore: true,
 
-  fetchHistory: async (isAdmin, pageNum = 0, append = false) => {
+  fetchHistory: async (isAdmin, pageNum = 0, append = false, search = '') => {
     set({ isLoading: true, error: null });
     try {
       const endpoint = isAdmin ? '/collections/history' : '/collections/my-history';
       const response = await api.get(endpoint, {
-        params: { page: pageNum, size: 10 }
+        params: { page: pageNum, size: 10, search }
       });
       
       if (response.success) {

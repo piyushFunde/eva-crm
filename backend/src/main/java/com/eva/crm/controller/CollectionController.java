@@ -46,9 +46,10 @@ public class CollectionController {
     public ResponseEntity<ApiResponse<Page<CollectionHistoryDTO>>> getMyHistory(
             @AuthenticationPrincipal User user,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "") String search) {
         
-        Page<CollectionHistoryDTO> history = collectionService.getExecutiveCollections(user, page, size);
+        Page<CollectionHistoryDTO> history = collectionService.getExecutiveCollections(user, page, size, search);
         return ResponseEntity.ok(ApiResponse.success("History fetched successfully", history));
     }
 
@@ -56,9 +57,10 @@ public class CollectionController {
     @GetMapping("/history")
     public ResponseEntity<ApiResponse<Page<CollectionHistoryDTO>>> getAllHistory(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "") String search) {
         
-        Page<CollectionHistoryDTO> history = collectionService.getAllCollections(page, size);
+        Page<CollectionHistoryDTO> history = collectionService.getAllCollections(page, size, search);
         return ResponseEntity.ok(ApiResponse.success("History fetched successfully", history));
     }
     @PreAuthorize("hasRole('ADMIN')")
