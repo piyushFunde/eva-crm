@@ -351,6 +351,14 @@ export default function Analytics() {
                 disabled={isExporting} 
                 activeColor="hover:border-[#60A5FA]/40 hover:bg-[#60A5FA]/5"
               />
+              <ExportBtn 
+                onClick={() => handleExport('csv')} 
+                icon={<Download size={18} />} 
+                label="CSV Flatfile" 
+                sub="Raw Comma-Separated Dataset" 
+                disabled={isExporting} 
+                activeColor="hover:border-amber-500/40 hover:bg-amber-500/5"
+              />
             </div>
           </div>
           <div className="mt-10 pt-8 border-t border-white/5">
@@ -359,12 +367,18 @@ export default function Analytics() {
               <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em]">Export Registry</p>
             </div>
             <div className="space-y-4">
-              {exportLogs.slice(0, 3).map((log, i) => (
-                <div key={i} className="flex items-center justify-between text-[10px] font-black">
-                  <span className="text-white/40 uppercase tracking-widest">{log.format} LOG</span>
-                  <span className="text-white/10">{new Date(log.exportedAt).toLocaleTimeString()}</span>
-                </div>
-              ))}
+              {exportLogs.length === 0 ? (
+                <p className="text-[10px] font-bold text-white/20 uppercase tracking-wider italic">No recent exports recorded</p>
+              ) : (
+                exportLogs.slice(0, 3).map((log, i) => (
+                  <div key={i} className="flex items-center justify-between text-[10px] font-black">
+                    <span className="text-white/40 uppercase tracking-widest">{log.format} LOG</span>
+                    <span className="text-white/10">
+                      {log.exportedAt ? new Date(log.exportedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
