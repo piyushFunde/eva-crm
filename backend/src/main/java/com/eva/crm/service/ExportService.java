@@ -87,7 +87,7 @@ public class ExportService {
             totalFont.setBold(true);
             totalStyle.setFont(totalFont);
 
-            String[] columns = {"Customer", "Phone", "Status", "Collected Amount", "Pending Amount", "Latest Collection"};
+            String[] columns = {"Customer", "Phone", "Status", "Collected Amount", "Pending Amount", "Due Date", "Collection Date", "Payment Mode"};
             
             int rowIdx = 0;
             
@@ -134,12 +134,14 @@ public class ExportService {
                     execTotalCollected = execTotalCollected.add(collected);
                     execTotalPending = execTotalPending.add(pending);
 
-                    String latestColl = "N/A";
+                    String collDate = "N/A";
+                    String collMode = "N/A";
                     if (!cLogs.isEmpty()) {
                         CollectionLog latestLog = cLogs.stream()
                                 .max((l1, l2) -> l1.getCollectedAt().compareTo(l2.getCollectedAt()))
                                 .get();
-                        latestColl = latestLog.getPaymentMode() + " (" + latestLog.getCollectedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ")";
+                        collDate = latestLog.getCollectedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                        collMode = latestLog.getPaymentMode();
                     }
 
                     org.apache.poi.ss.usermodel.Row row = sheet.createRow(rowIdx++);
@@ -148,7 +150,9 @@ public class ExportService {
                     row.createCell(2).setCellValue(c.getStatus());
                     row.createCell(3).setCellValue(collected.doubleValue());
                     row.createCell(4).setCellValue(pending.doubleValue());
-                    row.createCell(5).setCellValue(latestColl);
+                    row.createCell(5).setCellValue(c.getDueDate() != null ? c.getDueDate().toString() : "-");
+                    row.createCell(6).setCellValue(collDate);
+                    row.createCell(7).setCellValue(collMode);
                 }
 
                 // Executive Total Row
@@ -250,11 +254,11 @@ public class ExportService {
                 execPara.setSpacingAfter(5f);
                 document.add(execPara);
 
-                PdfPTable table = new PdfPTable(6);
+                 PdfPTable table = new PdfPTable(8);
                 table.setWidthPercentage(100);
-                table.setWidths(new float[]{25f, 15f, 15f, 15f, 15f, 15f});
+                table.setWidths(new float[]{20f, 12f, 10f, 12f, 12f, 12f, 12f, 10f});
 
-                String[] headers = {"Customer", "Phone", "Status", "Collected Amt", "Pending Amt", "Latest Collection"};
+                String[] headers = {"Customer", "Phone", "Status", "Collected Amt", "Pending Amt", "Due Date", "Collection Date", "Mode"};
                 for (String h : headers) {
                     PdfPCell cell = new PdfPCell(new Phrase(h, FontFactory.getFont(FontFactory.HELVETICA_BOLD)));
                     cell.setBackgroundColor(Color.LIGHT_GRAY);
@@ -275,13 +279,14 @@ public class ExportService {
                     execTotalCollected = execTotalCollected.add(collected);
                     execTotalPending = execTotalPending.add(pending);
 
-                    // Find latest collection details
-                    String latestColl = "N/A";
+                    String collDate = "N/A";
+                    String collMode = "N/A";
                     if (!cLogs.isEmpty()) {
                         CollectionLog latestLog = cLogs.stream()
                                 .max((l1, l2) -> l1.getCollectedAt().compareTo(l2.getCollectedAt()))
                                 .get();
-                        latestColl = latestLog.getPaymentMode() + " (" + latestLog.getCollectedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ")";
+                        collDate = latestLog.getCollectedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                        collMode = latestLog.getPaymentMode();
                     }
 
                     table.addCell(new PdfPCell(new Phrase(c.getName(), FontFactory.getFont(FontFactory.HELVETICA, 10))));
@@ -289,7 +294,9 @@ public class ExportService {
                     table.addCell(new PdfPCell(new Phrase(c.getStatus(), FontFactory.getFont(FontFactory.HELVETICA, 10))));
                     table.addCell(new PdfPCell(new Phrase("₹" + collected.toString(), FontFactory.getFont(FontFactory.HELVETICA, 10))));
                     table.addCell(new PdfPCell(new Phrase("₹" + pending.toString(), FontFactory.getFont(FontFactory.HELVETICA, 10))));
-                    table.addCell(new PdfPCell(new Phrase(latestColl, FontFactory.getFont(FontFactory.HELVETICA, 10))));
+                    table.addCell(new PdfPCell(new Phrase(c.getDueDate() != null ? c.getDueDate().toString() : "-", FontFactory.getFont(FontFactory.HELVETICA, 10))));
+                    table.addCell(new PdfPCell(new Phrase(collDate, FontFactory.getFont(FontFactory.HELVETICA, 10))));
+                    table.addCell(new PdfPCell(new Phrase(collMode, FontFactory.getFont(FontFactory.HELVETICA, 10))));
                 }
 
                 // Executive Total Row
@@ -309,9 +316,11 @@ public class ExportService {
                 totalPendCell.setPadding(6);
                 table.addCell(totalPendCell);
 
-                PdfPCell emptyCell = new PdfPCell(new Phrase(""));
-                emptyCell.setBackgroundColor(new Color(240, 240, 240));
-                table.addCell(emptyCell);
+                for (int col = 0; col < 3; col++) {
+                    PdfPCell emptyCell = new PdfPCell(new Phrase(""));
+                    emptyCell.setBackgroundColor(new Color(240, 240, 240));
+                    table.addCell(emptyCell);
+                }
 
                 document.add(table);
 
@@ -367,7 +376,7 @@ public class ExportService {
             customersByExecutive.computeIfAbsent(execName, k -> new ArrayList<>()).add(c);
         }
 
-        StringBuilder csv = new StringBuilder("Customer,Phone,Executive,Status,Collected Amount,Pending Amount,Latest Collection\n");
+        StringBuilder csv = new StringBuilder("Customer,Phone,Executive,Status,Collected Amount,Pending Amount,Due Date,Collection Date,Payment Mode\n");
 
         BigDecimal grandTotalCollected = BigDecimal.ZERO;
         BigDecimal grandTotalPending = BigDecimal.ZERO;
@@ -389,12 +398,14 @@ public class ExportService {
                 execTotalCollected = execTotalCollected.add(collected);
                 execTotalPending = execTotalPending.add(pending);
 
-                String latestColl = "N/A";
+                String collDate = "N/A";
+                String collMode = "N/A";
                 if (!cLogs.isEmpty()) {
                     CollectionLog latestLog = cLogs.stream()
                             .max((l1, l2) -> l1.getCollectedAt().compareTo(l2.getCollectedAt()))
                             .get();
-                    latestColl = latestLog.getPaymentMode() + " (" + latestLog.getCollectedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ")";
+                    collDate = latestLog.getCollectedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                    collMode = latestLog.getPaymentMode();
                 }
 
                 // escape csv commas
@@ -407,12 +418,15 @@ public class ExportService {
                    .append(c.getStatus()).append(",")
                    .append(collected).append(",")
                    .append(pending).append(",")
-                   .append(latestColl).append("\n");
+                   .append(c.getDueDate() != null ? c.getDueDate().toString() : "-").append(",")
+                   .append(collDate).append(",")
+                   .append(collMode).append("\n");
             }
 
-            csv.append("Executive Total,,,").append(execName).append(",")
+            String escapedExecName = execName.replace(",", " ");
+            csv.append("Executive Total,,,").append(escapedExecName).append(",")
                .append(execTotalCollected).append(",")
-               .append(execTotalPending).append(",\n\n");
+               .append(execTotalPending).append(",,,\n\n");
 
             grandTotalCollected = grandTotalCollected.add(execTotalCollected);
             grandTotalPending = grandTotalPending.add(execTotalPending);

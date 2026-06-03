@@ -9,6 +9,11 @@ import org.springframework.cache.annotation.EnableCaching;
 @EnableCaching
 public class EvaCrmApplication {
 
+    @jakarta.annotation.PostConstruct
+    public void init() {
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Kolkata"));
+    }
+
     public static void main(String[] args) {
         loadDotEnv();
         SpringApplication.run(EvaCrmApplication.class, args);

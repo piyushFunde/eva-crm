@@ -2,6 +2,7 @@ package com.eva.crm.controller;
 
 import com.eva.crm.dto.AnalyticsOverviewDTO;
 import com.eva.crm.dto.ApiResponse;
+import com.eva.crm.dto.CustomerResponseDTO;
 import com.eva.crm.dto.TrendDataDTO;
 import com.eva.crm.entity.Customer;
 import com.eva.crm.service.AnalyticsService;
@@ -37,20 +38,8 @@ public class AnalyticsController {
     }
 
     @GetMapping("/high-risk")
-    public ResponseEntity<ApiResponse<List<Customer>>> getHighRisk() {
+    public ResponseEntity<ApiResponse<List<CustomerResponseDTO>>> getHighRisk() {
         return ResponseEntity.ok(ApiResponse.success("High risk customers fetched", analyticsService.getHighRiskCustomers()));
-    }
-
-    @GetMapping("/high-risk-debug")
-    public ResponseEntity<?> getHighRiskDebug() {
-        try {
-            return ResponseEntity.ok(analyticsService.getHighRiskCustomers());
-        } catch (Exception e) {
-            java.io.StringWriter sw = new java.io.StringWriter();
-            java.io.PrintWriter pw = new java.io.PrintWriter(sw);
-            e.printStackTrace(pw);
-            return ResponseEntity.internalServerError().body(sw.toString());
-        }
     }
 
     @GetMapping("/performance")

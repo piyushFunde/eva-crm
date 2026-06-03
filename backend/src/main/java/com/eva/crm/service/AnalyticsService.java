@@ -98,9 +98,25 @@ public class AnalyticsService {
         }).collect(Collectors.toList());
     }
 
-    public List<Customer> getHighRiskCustomers() {
+    public List<CustomerResponseDTO> getHighRiskCustomers() {
         java.time.LocalDate cutoffDate = java.time.LocalDate.now().minusDays(2);
-        return customerRepository.findHighRiskCustomers(cutoffDate, PageRequest.of(0, 10));
+        return customerRepository.findHighRiskCustomers(cutoffDate, PageRequest.of(0, 10)).stream()
+                .map(this::mapCustomerToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private CustomerResponseDTO mapCustomerToDTO(Customer customer) {
+        return CustomerResponseDTO.builder()
+                .id(customer.getId())
+                .name(customer.getName())
+                .phone(customer.getPhone())
+                .address(customer.getAddress())
+                .emiAmount(customer.getEmiAmount())
+                .dueDate(customer.getDueDate())
+                .status(customer.getStatus())
+                .executiveId(customer.getAssignedExecutive() != null ? customer.getAssignedExecutive().getId() : null)
+                .executiveName(customer.getAssignedExecutive() != null ? customer.getAssignedExecutive().getFullName() : "Unassigned")
+                .build();
     }
 
     public List<Map<String, Object>> getExecutivePerformance() {

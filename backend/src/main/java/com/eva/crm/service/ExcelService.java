@@ -228,27 +228,7 @@ public class ExcelService {
         BigDecimal emiAmount = new BigDecimal(cleanedAmount);
 
         // Parse date (dd.MM.yyyy), fallback to other common formats, then today
-        LocalDate dueDate = LocalDate.now();
-        if (!dateStr.isEmpty()) {
-            String trimmed = dateStr.trim();
-            try {
-                dueDate = LocalDate.parse(trimmed, java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-            } catch (Exception e1) {
-                try {
-                    dueDate = LocalDate.parse(trimmed, java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                } catch (Exception e2) {
-                    try {
-                        dueDate = LocalDate.parse(trimmed, java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-                    } catch (Exception e3) {
-                        try {
-                            dueDate = LocalDate.parse(trimmed, java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-                        } catch (Exception e4) {
-                            log.warn("Failed to parse date '{}', defaulting to today", dateStr);
-                        }
-                    }
-                }
-            }
-        }
+        LocalDate dueDate = parseLocalDate(dateStr);
 
         // Resolve or auto-create executive
         User executive = null;
@@ -335,5 +315,59 @@ public class ExcelService {
                 .processedCount(0)
                 .errors(List.of(message))
                 .build();
+    }
+
+    private LocalDate parseLocalDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return LocalDate.now();
+        }
+        String trimmed = dateStr.trim();
+        
+        // Define all the patterns we want to support
+        String[] patterns = {
+            "dd.MM.yyyy",
+            "yyyy-MM-dd",
+            "dd/MM/yyyy",
+            "dd-MM-yyyy",
+            "d/M/yyyy",
+            "d-M-yyyy",
+            "d.M.yyyy",
+            "d/M/yy",
+            "d-M-yy",
+            "d.M.yy",
+            "d-MMM-yyyy",
+            "d-MMM-yy",
+            "d MMM yyyy",
+            "d MMM yy",
+            "d MMMM yyyy",
+            "d MMMM yy",
+            "MMMM d, yyyy",
+            "MMM d, yyyy",
+            "yyyy/MM/dd",
+            "yyyy.MM.dd"
+        };
+        
+        for (String pattern : patterns) {
+            try {
+                java.time.format.DateTimeFormatter formatter = new java.time.format.DateTimeFormatterBuilder()
+                        .parseCaseInsensitive()
+                        .appendPattern(pattern)
+                        .toFormatter(java.util.Locale.ENGLISH);
+                return LocalDate.parse(trimmed, formatter);
+            } catch (Exception e) {
+                // Try next pattern
+            }
+        }
+        
+        // Try parsing as a double (Excel serial date representation)
+        try {
+            double serialDate = Double.parseDouble(trimmed);
+            return org.apache.poi.ss.usermodel.DateUtil.getLocalDateTime(serialDate).toLocalDate();
+        } catch (Exception e) {
+            // Not a number
+        }
+
+        log.warn("Failed to parse date '{}', defaulting to today", dateStr);
+        return LocalDate.now();
     }
 }

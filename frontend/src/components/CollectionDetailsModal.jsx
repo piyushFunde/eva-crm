@@ -1,6 +1,9 @@
-import { X, Calendar, User, IndianRupee, CreditCard, Download, ExternalLink, Hash, FileText } from 'lucide-react';
+import { X, Calendar, User, IndianRupee, CreditCard, Download, ExternalLink, Hash, FileText, RotateCcw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatCurrency, formatTime } from '@/utils/formatters';
+import useAuthStore from '@/store/authStore';
+import useHistoryStore from '@/store/historyStore';
+import { toast } from 'sonner';
 
 export default function CollectionDetailsModal({ record, onClose }) {
   if (!record) return null;
@@ -122,7 +125,27 @@ export default function CollectionDetailsModal({ record, onClose }) {
         </div>
 
         {/* Footer Action */}
-        <div className="px-6 py-6 bg-[#1a2d42] border-t border-white/5">
+        <div className="px-6 py-6 bg-[#1a2d42] border-t border-white/5 flex flex-col gap-3">
+           {useAuthStore.getState().isAdmin() && (
+             <button 
+               onClick={() => {
+                 if (confirm('Revert this collection? This will restore the customer\'s pending balance.')) {
+                   useHistoryStore.getState().deleteRecord(record.id).then(res => {
+                     if (res?.success) {
+                       toast.success('Collection reverted successfully');
+                       onClose();
+                     } else {
+                       toast.error('Failed to revert: ' + (res?.error || 'Unknown error'));
+                     }
+                   });
+                 }
+               }}
+               className="w-full py-4 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 rounded-2xl text-[12px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all"
+             >
+               <RotateCcw size={14} />
+               Revoke Payment
+             </button>
+           )}
            <button 
              onClick={onClose}
              className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-[12px] font-black text-white uppercase tracking-[0.2em] hover:bg-white/10 transition-all"
