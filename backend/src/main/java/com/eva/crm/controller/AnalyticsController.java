@@ -41,6 +41,18 @@ public class AnalyticsController {
         return ResponseEntity.ok(ApiResponse.success("High risk customers fetched", analyticsService.getHighRiskCustomers()));
     }
 
+    @GetMapping("/high-risk-debug")
+    public ResponseEntity<?> getHighRiskDebug() {
+        try {
+            return ResponseEntity.ok(analyticsService.getHighRiskCustomers());
+        } catch (Exception e) {
+            java.io.StringWriter sw = new java.io.StringWriter();
+            java.io.PrintWriter pw = new java.io.PrintWriter(sw);
+            e.printStackTrace(pw);
+            return ResponseEntity.internalServerError().body(sw.toString());
+        }
+    }
+
     @GetMapping("/performance")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getPerformance() {
         return ResponseEntity.ok(ApiResponse.success("Performance data fetched", analyticsService.getExecutivePerformance()));
