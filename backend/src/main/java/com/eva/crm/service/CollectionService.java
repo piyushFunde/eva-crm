@@ -169,8 +169,20 @@ public class CollectionService {
 
         Customer customer = log.getCustomer();
 
+        // Restore emiAmount if it is 0 or null (e.g. corrupted historical data)
+        if (customer.getEmiAmount() == null || customer.getEmiAmount().compareTo(java.math.BigDecimal.ZERO) == 0) {
+            java.util.List<CollectionLog> allLogs = collectionLogRepository.findByCustomerIdOrderByCollectedAtDesc(customer.getId());
+            if (!allLogs.isEmpty()) {
+                CollectionLog oldestLog = allLogs.get(allLogs.size() - 1);
+                if (oldestLog.getPreviousPendingAmount() != null && oldestLog.getPreviousPendingAmount().compareTo(java.math.BigDecimal.ZERO) > 0) {
+                    customer.setEmiAmount(oldestLog.getPreviousPendingAmount());
+                }
+            }
+        }
+
         // Revert Customer state
-        java.math.BigDecimal currentPending = customer.getPendingAmount() != null ? customer.getPendingAmount() : customer.getEmiAmount();
+        java.math.BigDecimal currentPending = customer.getPendingAmount() != null ? customer.getPendingAmount() : 
+                ("COMPLETED".equalsIgnoreCase(customer.getStatus()) ? java.math.BigDecimal.ZERO : customer.getEmiAmount());
         java.math.BigDecimal revertedPending = currentPending.add(log.getAmountCollected());
         customer.setPendingAmount(revertedPending);
         
