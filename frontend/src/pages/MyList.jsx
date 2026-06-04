@@ -20,7 +20,7 @@ export default function MyList() {
   const { customers, fetchCustomers, isLoading } = useCustomerStore();
 
   useEffect(() => {
-    fetchCustomers(0, 100, search);
+    fetchCustomers(0, 10000, search);
   }, [fetchCustomers, search]);
 
   const handleRevokeLatestPayment = (customer) => {
@@ -28,7 +28,7 @@ export default function MyList() {
       .then(res => {
         if (res.success) {
           toast.success(`Latest payment for ${customer.name} revoked successfully`);
-          fetchCustomers(0, 100, search);
+          fetchCustomers(0, 10000, search);
         } else {
           toast.error(res.error || 'Failed to revoke payment');
         }
@@ -366,7 +366,7 @@ export default function MyList() {
             customer={selectedCustomer}
             onClose={() => {
               setSelectedCustomer(null);
-              fetchCustomers(0, 100, search);
+              fetchCustomers(0, 10000, search);
             }}
           />
         )}
