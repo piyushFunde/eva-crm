@@ -14,10 +14,10 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
     Page<Customer> findByNameContainingIgnoreCaseAndAssignedExecutiveId(String name, Long executiveId, Pageable pageable);
     Page<Customer> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
-    @Query("SELECT SUM(c.emiAmount) FROM Customer c")
+    @Query("SELECT SUM(COALESCE(c.pendingAmount, c.emiAmount)) FROM Customer c")
     BigDecimal sumTotalPendingAmount();
 
-    @Query("SELECT c FROM Customer c WHERE c.status != 'COMPLETED' AND c.dueDate <= :cutoffDate ORDER BY c.emiAmount DESC")
+    @Query("SELECT c FROM Customer c WHERE c.status != 'COMPLETED' AND c.dueDate <= :cutoffDate ORDER BY COALESCE(c.pendingAmount, c.emiAmount) DESC")
     List<Customer> findHighRiskCustomers(@org.springframework.data.repository.query.Param("cutoffDate") java.time.LocalDate cutoffDate, Pageable pageable);
 
     @org.springframework.data.jpa.repository.Modifying

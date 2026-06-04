@@ -40,7 +40,7 @@ public class DashboardService {
                     && c.getAssignedExecutive().getId().equals(executive.getId())
                     && !c.getDueDate().isAfter(LocalDate.now())) {
                 if (!"COMPLETED".equalsIgnoreCase(c.getStatus())) {
-                    pending = pending.add(c.getEmiAmount());
+                    pending = pending.add(c.getPendingAmount() != null ? c.getPendingAmount() : c.getEmiAmount());
                     assignedCount++;
                 } else if (activeTodayCustomerIds.contains(c.getId())) {
                     assignedCount++;
@@ -75,7 +75,7 @@ public class DashboardService {
         for (Customer c : allCustomers) {
             if (!c.getDueDate().isAfter(LocalDate.now())) {
                 if (!"COMPLETED".equalsIgnoreCase(c.getStatus())) {
-                    pending = pending.add(c.getEmiAmount());
+                    pending = pending.add(c.getPendingAmount() != null ? c.getPendingAmount() : c.getEmiAmount());
                     totalPending++;
                 } else if (activeTodayCustomerIds.contains(c.getId())) {
                     totalPending++;
@@ -114,7 +114,7 @@ public class DashboardService {
                             && c.getAssignedExecutive().getId().equals(exec.getId())
                             && !c.getDueDate().isAfter(LocalDate.now())) {
                         if (!"COMPLETED".equalsIgnoreCase(c.getStatus())) {
-                            pending = pending.add(c.getEmiAmount());
+                            pending = pending.add(c.getPendingAmount() != null ? c.getPendingAmount() : c.getEmiAmount());
                             count++;
                         } else if (activeTodayCustomerIds.contains(c.getId())) {
                             count++;

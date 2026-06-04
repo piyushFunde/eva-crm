@@ -264,23 +264,35 @@ export default function MyList() {
                     </div>
 
                     {/* Financial Summary Box */}
-                    <div className="bg-[#0F1923]/40 rounded-2xl p-4 flex items-center justify-between border border-white/5 relative overflow-hidden">
+                    <div className="bg-[#0F1923]/40 rounded-2xl p-4 grid grid-cols-2 gap-4 border border-white/5 relative overflow-hidden">
                       <div className="absolute top-0 right-0 p-1 opacity-5">
                         <Wallet size={40} />
                       </div>
-                      <div>
-                        <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] mb-1">Due Installment</p>
-                        <p className="text-2xl font-black text-white tracking-tighter">
-                          {formatCurrency(customer.emiAmount)}
-                        </p>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] mb-0.5">Due Installment</p>
+                          <p className="text-[15px] font-black text-white/80 tracking-tight">
+                            {formatCurrency(customer.emiAmount)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] mb-0.5">Pending Balance</p>
+                          <p className={`text-[17px] font-black tracking-tight ${
+                            (customer.pendingAmount ?? customer.emiAmount) <= 0 ? 'text-[#22C55E]' : 'text-white'
+                          }`}>
+                            {formatCurrency(customer.pendingAmount ?? customer.emiAmount)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] mb-1">Deadline</p>
-                        <div className={`flex flex-col items-end font-black uppercase text-[11px] ${
-                          overdue ? 'text-[#EF4444]' : dueToday ? 'text-[#F59E0B]' : 'text-[#4ECDC4]'
-                        }`}>
-                          <span>{dueToday ? 'Due Today' : overdue ? 'Delayed' : 'Upcoming'}</span>
-                          <span className="text-[10px] text-white/40 font-bold normal-case mt-0.5">{formatDate(customer.dueDate)}</span>
+                      <div className="text-right flex flex-col justify-between items-end">
+                        <div>
+                          <p className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] mb-1">Deadline</p>
+                          <div className={`flex flex-col items-end font-black uppercase text-[10px] ${
+                            overdue ? 'text-[#EF4444]' : dueToday ? 'text-[#F59E0B]' : 'text-[#4ECDC4]'
+                          }`}>
+                            <span>{dueToday ? 'Due Today' : overdue ? 'Delayed' : 'Upcoming'}</span>
+                            <span className="text-[9px] text-white/40 font-bold normal-case mt-0.5">{formatDate(customer.dueDate)}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -345,9 +357,9 @@ export default function MyList() {
           >
              <div className="bg-[#1a2d42]/90 backdrop-blur-xl px-6 py-3 rounded-full border border-white/10 shadow-2xl flex items-center gap-6">
                 <div className="flex flex-col items-center">
-                   <p className="text-[8px] font-black text-white/30 uppercase">Total Value</p>
+                   <p className="text-[8px] font-black text-white/30 uppercase">Total Pending</p>
                    <p className="text-xs font-black text-white tracking-tighter">
-                      {formatCurrency(sorted.reduce((acc, c) => acc + c.emiAmount, 0))}
+                      {formatCurrency(sorted.reduce((acc, c) => acc + (c.pendingAmount ?? c.emiAmount), 0))}
                    </p>
                 </div>
                 <div className="w-px h-6 bg-white/10" />

@@ -14,6 +14,7 @@ public class CustomerResponseDTO {
     private String phone;
     private String address;
     private BigDecimal emiAmount;
+    private BigDecimal pendingAmount;
     private LocalDate dueDate;
     private String status;
     private Long executiveId;

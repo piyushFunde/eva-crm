@@ -129,7 +129,7 @@ public class ExportService {
                     BigDecimal collected = cLogs.stream()
                             .map(CollectionLog::getAmountCollected)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
-                    BigDecimal pending = c.getEmiAmount();
+                    BigDecimal pending = c.getPendingAmount() != null ? c.getPendingAmount() : c.getEmiAmount();
 
                     execTotalCollected = execTotalCollected.add(collected);
                     execTotalPending = execTotalPending.add(pending);
@@ -274,7 +274,7 @@ public class ExportService {
                     BigDecimal collected = cLogs.stream()
                             .map(CollectionLog::getAmountCollected)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
-                    BigDecimal pending = c.getEmiAmount();
+                    BigDecimal pending = c.getPendingAmount() != null ? c.getPendingAmount() : c.getEmiAmount();
 
                     execTotalCollected = execTotalCollected.add(collected);
                     execTotalPending = execTotalPending.add(pending);
@@ -393,7 +393,7 @@ public class ExportService {
                 BigDecimal collected = cLogs.stream()
                         .map(CollectionLog::getAmountCollected)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
-                BigDecimal pending = c.getEmiAmount();
+                BigDecimal pending = c.getPendingAmount() != null ? c.getPendingAmount() : c.getEmiAmount();
 
                 execTotalCollected = execTotalCollected.add(collected);
                 execTotalPending = execTotalPending.add(pending);

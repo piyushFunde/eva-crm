@@ -112,6 +112,7 @@ public class AnalyticsService {
                 .phone(customer.getPhone())
                 .address(customer.getAddress())
                 .emiAmount(customer.getEmiAmount())
+                .pendingAmount(customer.getPendingAmount() != null ? customer.getPendingAmount() : customer.getEmiAmount())
                 .dueDate(customer.getDueDate())
                 .status(customer.getStatus())
                 .executiveId(customer.getAssignedExecutive() != null ? customer.getAssignedExecutive().getId() : null)

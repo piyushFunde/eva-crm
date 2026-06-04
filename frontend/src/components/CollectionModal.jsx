@@ -36,7 +36,7 @@ export default function CollectionModal({ customer, onClose }) {
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     resolver: zodResolver(collectionSchema),
-    defaultValues: { amount: customer?.emiAmount || '', notes: '' }
+    defaultValues: { amount: (customer?.pendingAmount ?? customer?.emiAmount) || '', notes: '' }
   });
 
   const watchedAmount = watch('amount');
@@ -143,7 +143,7 @@ export default function CollectionModal({ customer, onClose }) {
                 <label className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em]">Transaction Value</label>
                 <div className="flex items-center gap-1.5 text-[#4ECDC4] text-[10px] font-bold uppercase">
                   <Info size={12} />
-                  Max: {formatCurrency(customer.emiAmount)}
+                  Max: {formatCurrency(customer.pendingAmount ?? customer.emiAmount)}
                 </div>
               </div>
               <div className="relative group">
@@ -160,8 +160,8 @@ export default function CollectionModal({ customer, onClose }) {
               {/* Intelligent Chips */}
               <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                 {[
-                  { label: 'Full Installment', val: customer.emiAmount },
-                  { label: '50% Collection', val: customer.emiAmount / 2 },
+                  { label: 'Full Installment', val: customer.pendingAmount ?? customer.emiAmount },
+                  { label: '50% Collection', val: (customer.pendingAmount ?? customer.emiAmount) / 2 },
                   { label: 'Minimum', val: 500 }
                 ].map((chip) => (
                   <button 
@@ -260,7 +260,7 @@ export default function CollectionModal({ customer, onClose }) {
                   <Loader2 className="w-6 h-6 animate-spin" />
                 ) : (
                   <>
-                    Commit Recovery
+                    Receive Payment
                     <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center group-hover:translate-x-1 transition-transform">
                       <ArrowRight size={18} />
                     </div>

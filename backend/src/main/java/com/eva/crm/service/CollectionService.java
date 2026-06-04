@@ -49,7 +49,7 @@ public class CollectionService {
             imagePath = saveReceiptImage(request.getReceiptImage());
         }
 
-        java.math.BigDecimal previousPending = customer.getEmiAmount();
+        java.math.BigDecimal previousPending = customer.getPendingAmount() != null ? customer.getPendingAmount() : customer.getEmiAmount();
         java.math.BigDecimal remaining = previousPending.subtract(request.getAmountCollected());
         String newStatus;
 
@@ -78,7 +78,7 @@ public class CollectionService {
 
         // Update Customer Status
         customer.setStatus(newStatus);
-        customer.setEmiAmount(remaining);
+        customer.setPendingAmount(remaining);
         customerRepository.save(customer);
 
         // Broadcast Live Update
@@ -170,11 +170,15 @@ public class CollectionService {
         Customer customer = log.getCustomer();
 
         // Revert Customer state
-        customer.setEmiAmount(customer.getEmiAmount().add(log.getAmountCollected()));
+        java.math.BigDecimal currentPending = customer.getPendingAmount() != null ? customer.getPendingAmount() : customer.getEmiAmount();
+        java.math.BigDecimal revertedPending = currentPending.add(log.getAmountCollected());
+        customer.setPendingAmount(revertedPending);
         
         // Simple status reversal logic
-        if (customer.getEmiAmount().compareTo(java.math.BigDecimal.ZERO) > 0) {
-            customer.setStatus(customer.getEmiAmount().compareTo(log.getPreviousPendingAmount()) >= 0 ? "PENDING" : "PARTIAL");
+        if (revertedPending.compareTo(java.math.BigDecimal.ZERO) > 0) {
+            customer.setStatus(revertedPending.compareTo(log.getPreviousPendingAmount()) >= 0 ? "PENDING" : "PARTIAL");
+        } else {
+            customer.setStatus("COMPLETED");
         }
         
         customerRepository.save(customer);

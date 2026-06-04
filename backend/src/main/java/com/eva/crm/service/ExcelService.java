@@ -264,6 +264,7 @@ public class ExcelService {
                 .phone(phone)
                 .address("Partner ID: " + phone)
                 .emiAmount(emiAmount)
+                .pendingAmount(emiAmount)
                 .dueDate(dueDate)
                 .status("PENDING")
                 .assignedExecutive(executive)

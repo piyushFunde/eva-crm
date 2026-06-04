@@ -30,6 +30,8 @@ public class Customer {
     @Column(nullable = false)
     private BigDecimal emiAmount;
 
+    private BigDecimal pendingAmount;
+
     @Column(nullable = false)
     private LocalDate dueDate;
 
