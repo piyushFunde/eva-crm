@@ -217,4 +217,56 @@ public class CollectionService {
         CollectionLog latestLog = logs.get(0);
         deleteCollection(latestLog.getId());
     }
+
+    @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "analytics", allEntries = true)
+    public void editLatestCollectionForCustomer(Long customerId, java.math.BigDecimal newAmount) {
+        java.util.List<CollectionLog> logs = collectionLogRepository.findByCustomerIdOrderByCollectedAtDesc(customerId);
+        if (logs.isEmpty()) {
+            throw new ResourceNotFoundException("No collection records found for this customer");
+        }
+        CollectionLog latestLog = logs.get(0);
+        Customer customer = latestLog.getCustomer();
+
+        // 1. Calculate the customer's pending amount BEFORE this latest collection log
+        java.math.BigDecimal previousPending = latestLog.getPreviousPendingAmount();
+        if (previousPending == null) {
+            previousPending = customer.getEmiAmount();
+        }
+
+        // 2. Calculate the new remaining amount
+        java.math.BigDecimal newRemaining = previousPending.subtract(newAmount);
+        String newStatus;
+        if (newRemaining.compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            newStatus = "COMPLETED";
+            newRemaining = java.math.BigDecimal.ZERO;
+        } else if (newRemaining.compareTo(previousPending) >= 0) {
+            newStatus = "PENDING";
+        } else {
+            newStatus = "PARTIAL";
+        }
+
+        // 3. Update the CollectionLog
+        latestLog.setAmountCollected(newAmount);
+        latestLog.setRemainingAmount(newRemaining);
+        latestLog.setStatusAfterCollection(newStatus);
+        collectionLogRepository.save(latestLog);
+
+        // 4. Update the Customer
+        customer.setPendingAmount(newRemaining);
+        customer.setStatus(newStatus);
+        
+        // Restore emiAmount if it is 0 or null
+        if (customer.getEmiAmount() == null || customer.getEmiAmount().compareTo(java.math.BigDecimal.ZERO) == 0) {
+            CollectionLog oldestLog = logs.get(logs.size() - 1);
+            if (oldestLog.getPreviousPendingAmount() != null && oldestLog.getPreviousPendingAmount().compareTo(java.math.BigDecimal.ZERO) > 0) {
+                customer.setEmiAmount(oldestLog.getPreviousPendingAmount());
+            }
+        }
+        
+        customerRepository.save(customer);
+
+        // Broadcast Live Update
+        messagingTemplate.convertAndSend("/topic/collections", mapToDTO(latestLog));
+    }
 }

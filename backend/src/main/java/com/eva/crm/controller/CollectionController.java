@@ -76,4 +76,13 @@ public class CollectionController {
         collectionService.deleteLatestCollectionForCustomer(customerId);
         return ResponseEntity.ok(ApiResponse.success("Latest collection reverted successfully", null));
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/customer/{customerId}/latest/edit")
+    public ResponseEntity<ApiResponse<Void>> editLatestCollectionForCustomer(
+            @PathVariable Long customerId,
+            @RequestParam java.math.BigDecimal amount) {
+        collectionService.editLatestCollectionForCustomer(customerId, amount);
+        return ResponseEntity.ok(ApiResponse.success("Latest collection edited successfully", null));
+    }
 }

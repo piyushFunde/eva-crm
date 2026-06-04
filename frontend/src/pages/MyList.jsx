@@ -38,6 +38,32 @@ export default function MyList() {
       });
   };
 
+  const handleEditLatestPayment = (customer) => {
+    const newAmountStr = prompt(`Edit Payment for ${customer.name}\n\nEnter the correct amount collected (₹):`);
+    if (newAmountStr === null) return;
+    
+    const amount = parseFloat(newAmountStr.trim());
+    if (isNaN(amount) || amount < 0) {
+      toast.error("Please enter a valid positive number for the amount");
+      return;
+    }
+
+    api.post(`/collections/customer/${customer.id}/latest/edit`, null, {
+      params: { amount }
+    })
+      .then(res => {
+        if (res.success) {
+          toast.success(`Latest payment updated successfully to ${formatCurrency(amount)}`);
+          fetchCustomers(0, 10000, search);
+        } else {
+          toast.error(res.error || 'Failed to update payment');
+        }
+      })
+      .catch(err => {
+        toast.error(err.message || 'Error updating payment');
+      });
+  };
+
   const filtered = customers.filter((c) => {
     const matchesSearch =
       c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -328,13 +354,11 @@ export default function MyList() {
                         {useAuthStore.getState().isAdmin() && (
                           <button
                             onClick={() => {
-                              if (confirm(`Revoke latest payment for: ${customer.name}? This will restore their previous balance.`)) {
-                                handleRevokeLatestPayment(customer);
-                              }
+                              handleEditLatestPayment(customer);
                             }}
-                            className="px-3 py-1.5 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 text-[9px] font-black uppercase tracking-wider transition-all"
+                            className="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg hover:bg-emerald-500/20 text-[9px] font-black uppercase tracking-wider transition-all"
                           >
-                            Revoke Payment
+                            Edit Payment
                           </button>
                         )}
                       </div>
