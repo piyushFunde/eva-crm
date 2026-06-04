@@ -14,6 +14,7 @@ export default function MyList() {
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [editCustomer, setEditCustomer] = useState(null);
   const [sortBy, setSortBy] = useState('nameAsc');
   const [selectedDate, setSelectedDate] = useState('');
   
@@ -39,29 +40,7 @@ export default function MyList() {
   };
 
   const handleEditLatestPayment = (customer) => {
-    const newAmountStr = prompt(`Edit Payment for ${customer.name}\n\nEnter the correct amount collected (₹):`);
-    if (newAmountStr === null) return;
-    
-    const amount = parseFloat(newAmountStr.trim());
-    if (isNaN(amount) || amount < 0) {
-      toast.error("Please enter a valid positive number for the amount");
-      return;
-    }
-
-    api.post(`/collections/customer/${customer.id}/latest/edit`, null, {
-      params: { amount }
-    })
-      .then(res => {
-        if (res.success) {
-          toast.success(`Latest payment updated successfully to ${formatCurrency(amount)}`);
-          fetchCustomers(0, 10000, search);
-        } else {
-          toast.error(res.error || 'Failed to update payment');
-        }
-      })
-      .catch(err => {
-        toast.error(err.message || 'Error updating payment');
-      });
+    setEditCustomer(customer);
   };
 
   const filtered = customers.filter((c) => {
@@ -404,6 +383,19 @@ export default function MyList() {
               setSelectedCustomer(null);
               fetchCustomers(0, 10000, search);
             }}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {editCustomer && (
+          <CollectionModal
+            customer={editCustomer}
+            onClose={() => {
+              setEditCustomer(null);
+              fetchCustomers(0, 10000, search);
+            }}
+            isEdit={true}
           />
         )}
       </AnimatePresence>

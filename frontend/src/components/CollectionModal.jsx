@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Camera, IndianRupee, Loader2, WifiOff, CheckCircle2, X, Info, CreditCard, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
@@ -12,6 +12,7 @@ import useAuthStore from '@/store/authStore';
 import useNetworkStore from '@/offline/networkManager';
 import { saveOfflineCollection } from '@/offline/db';
 import { formatCurrency } from '@/utils/formatters';
+import api from '@/api/axios';
 
 const collectionSchema = z.object({
   amount: z.coerce.number().min(1, 'Amount must be greater than 0'),
@@ -25,7 +26,7 @@ const PAYMENT_MODES = [
   { value: 'BANK', label: 'Transfer' }
 ];
 
-export default function CollectionModal({ customer, onClose }) {
+export default function CollectionModal({ customer, onClose, isEdit = false }) {
   const [paymentMode, setPaymentMode] = useState('CASH');
   const [receiptImage, setReceiptImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -33,6 +34,7 @@ export default function CollectionModal({ customer, onClose }) {
   const { recordCollection, isLoading } = useCustomerStore();
   const { deviceId } = useAuthStore();
   const { isOnline } = useNetworkStore();
+  const [editLoading, setEditLoading] = useState(false);
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     resolver: zodResolver(collectionSchema),
@@ -40,6 +42,26 @@ export default function CollectionModal({ customer, onClose }) {
   });
 
   const watchedAmount = watch('amount');
+
+  useEffect(() => {
+    if (isEdit && customer) {
+      setEditLoading(true);
+      api.get(`/collections/customer/${customer.id}/latest`)
+        .then(res => {
+          if (res.success && res.data) {
+            setValue('amount', res.data.amountCollected || '');
+            setValue('notes', res.data.notes || '');
+            setPaymentMode(res.data.paymentMode || 'CASH');
+          }
+        })
+        .catch(err => {
+          toast.error(err.message || 'Failed to load transaction details');
+        })
+        .finally(() => {
+          setEditLoading(false);
+        });
+    }
+  }, [isEdit, customer, setValue]);
 
   if (!customer) return null;
 
@@ -54,6 +76,30 @@ export default function CollectionModal({ customer, onClose }) {
   };
 
   const onSubmit = async (data) => {
+    if (isEdit) {
+      setEditLoading(true);
+      try {
+        const response = await api.post(`/collections/customer/${customer.id}/latest/edit`, null, {
+          params: {
+            amount: data.amount,
+            paymentMode,
+            notes: data.notes || ''
+          }
+        });
+        if (response.success) {
+          toast.success(`Transaction Updated: ₹${data.amount}`);
+          onClose();
+        } else {
+          toast.error(response.error || 'Failed to update payment');
+        }
+      } catch (err) {
+        toast.error(err.message || 'Error updating payment');
+      } finally {
+        setEditLoading(false);
+      }
+      return;
+    }
+
     const clientGeneratedId = uuidv4();
     
     let processedImage = receiptImage;
@@ -124,7 +170,7 @@ export default function CollectionModal({ customer, onClose }) {
                <CreditCard size={20} />
              </div>
              <div>
-               <h2 className="text-lg font-black text-white tracking-tight uppercase">Recovery Entry</h2>
+               <h2 className="text-lg font-black text-white tracking-tight uppercase">{isEdit ? "Payment Edit" : "Recovery Entry"}</h2>
                <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">{customer.name}</p>
              </div>
           </div>
@@ -143,7 +189,7 @@ export default function CollectionModal({ customer, onClose }) {
                 <label className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em]">Transaction Value</label>
                 <div className="flex items-center gap-1.5 text-[#4ECDC4] text-[10px] font-bold uppercase">
                   <Info size={12} />
-                  Max: {formatCurrency(customer.pendingAmount ?? customer.emiAmount)}
+                  {isEdit ? "Editing Latest Payment" : `Max: ${formatCurrency(customer.pendingAmount ?? customer.emiAmount)}`}
                 </div>
               </div>
               <div className="relative group">
@@ -158,26 +204,28 @@ export default function CollectionModal({ customer, onClose }) {
                 />
               </div>
               {/* Intelligent Chips */}
-              <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                {[
-                  { label: 'Full Installment', val: customer.pendingAmount ?? customer.emiAmount },
-                  { label: '50% Collection', val: (customer.pendingAmount ?? customer.emiAmount) / 2 },
-                  { label: 'Minimum', val: 500 }
-                ].map((chip) => (
-                  <button 
-                    key={chip.label}
-                    type="button" 
-                    onClick={() => setValue('amount', chip.val)}
-                    className={`flex-shrink-0 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
-                      Math.abs(watchedAmount - chip.val) < 1 
-                        ? 'bg-[#4ECDC4] border-[#4ECDC4] text-[#0F1923] shadow-[0_4px_15px_rgba(78,205,196,0.3)]' 
-                        : 'bg-white/5 border-white/5 text-white/40 hover:border-white/20'
-                    }`}
-                  >
-                    {chip.label}
-                  </button>
-                ))}
-              </div>
+              {!isEdit && (
+                <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                  {[
+                    { label: 'Full Installment', val: customer.pendingAmount ?? customer.emiAmount },
+                    { label: '50% Collection', val: (customer.pendingAmount ?? customer.emiAmount) / 2 },
+                    { label: 'Minimum', val: 500 }
+                  ].map((chip) => (
+                    <button 
+                      key={chip.label}
+                      type="button" 
+                      onClick={() => setValue('amount', chip.val)}
+                      className={`flex-shrink-0 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
+                        Math.abs(watchedAmount - chip.val) < 1 
+                          ? 'bg-[#4ECDC4] border-[#4ECDC4] text-[#0F1923] shadow-[0_4px_15px_rgba(78,205,196,0.3)]' 
+                          : 'bg-white/5 border-white/5 text-white/40 hover:border-white/20'
+                      }`}
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Payment Mode */}
@@ -202,42 +250,44 @@ export default function CollectionModal({ customer, onClose }) {
             </div>
 
             {/* Visual Proof */}
-            <div className="space-y-4">
-              <label className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em] ml-1">Evidence / Receipt</label>
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                className={`group relative h-48 border-2 border-dashed rounded-[24px] flex flex-col items-center justify-center cursor-pointer transition-all ${
-                  previewUrl 
-                    ? 'border-[#4ECDC4]/50 bg-[#4ECDC4]/5' 
-                    : 'border-white/10 hover:border-[#4ECDC4]/30 bg-white/5'
-                }`}
-              >
-                {previewUrl ? (
-                  <div className="relative w-full h-full p-2">
-                    <img src={previewUrl} className="w-full h-full object-cover rounded-[18px]" />
-                    <div className="absolute inset-0 bg-[#0F1923]/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-[18px]">
-                      <Camera className="text-white" size={32} />
+            {!isEdit && (
+              <div className="space-y-4">
+                <label className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em] ml-1">Evidence / Receipt</label>
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`group relative h-48 border-2 border-dashed rounded-[24px] flex flex-col items-center justify-center cursor-pointer transition-all ${
+                    previewUrl 
+                      ? 'border-[#4ECDC4]/50 bg-[#4ECDC4]/5' 
+                      : 'border-white/10 hover:border-[#4ECDC4]/30 bg-white/5'
+                  }`}
+                >
+                  {previewUrl ? (
+                    <div className="relative w-full h-full p-2">
+                      <img src={previewUrl} className="w-full h-full object-cover rounded-[18px]" />
+                      <div className="absolute inset-0 bg-[#0F1923]/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-[18px]">
+                        <Camera className="text-white" size={32} />
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center">
-                    <div className="w-14 h-14 bg-[#4ECDC4]/10 rounded-full flex items-center justify-center text-[#4ECDC4] mb-4 group-hover:scale-110 transition-transform">
-                      <Camera size={28} />
+                  ) : (
+                    <div className="flex flex-col items-center">
+                      <div className="w-14 h-14 bg-[#4ECDC4]/10 rounded-full flex items-center justify-center text-[#4ECDC4] mb-4 group-hover:scale-110 transition-transform">
+                        <Camera size={28} />
+                      </div>
+                      <p className="text-[13px] font-black text-white tracking-tight">Tap to capture receipt</p>
+                      <p className="text-[10px] font-bold text-white/20 mt-1.5 uppercase tracking-widest">Supports Camera & Gallery</p>
                     </div>
-                    <p className="text-[13px] font-black text-white tracking-tight">Tap to capture receipt</p>
-                    <p className="text-[10px] font-bold text-white/20 mt-1.5 uppercase tracking-widest">Supports Camera & Gallery</p>
-                  </div>
-                )}
-                <input 
-                  ref={fileInputRef}
-                  type="file" 
-                  accept="image/*" 
-                  capture="environment" 
-                  className="hidden" 
-                  onChange={handleImageChange}
-                />
+                  )}
+                  <input 
+                    ref={fileInputRef}
+                    type="file" 
+                    accept="image/*" 
+                    capture="environment" 
+                    className="hidden" 
+                    onChange={handleImageChange}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Remark */}
             <div className="space-y-4 pb-4">
@@ -253,14 +303,14 @@ export default function CollectionModal({ customer, onClose }) {
             <div className="sticky bottom-0 pt-4 pb-6 bg-[#1a2d42] z-10 border-t border-white/5">
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || editLoading}
                 className="w-full bg-[#0F1923] text-white rounded-2xl py-4 font-black text-base flex items-center justify-center gap-3 hover:bg-[#1a2d42] active:scale-[0.98] transition-all shadow-2xl shadow-[#0F1923]/20 relative overflow-hidden group"
               >
-                {isLoading ? (
+                {isLoading || editLoading ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
                 ) : (
                   <>
-                    Receive Payment
+                    {isEdit ? "Update Payment" : "Receive Payment"}
                     <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center group-hover:translate-x-1 transition-transform">
                       <ArrowRight size={18} />
                     </div>

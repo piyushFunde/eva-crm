@@ -218,9 +218,17 @@ public class CollectionService {
         deleteCollection(latestLog.getId());
     }
 
+    public CollectionHistoryDTO getLatestCollectionForCustomer(Long customerId) {
+        java.util.List<CollectionLog> logs = collectionLogRepository.findByCustomerIdOrderByCollectedAtDesc(customerId);
+        if (logs.isEmpty()) {
+            throw new ResourceNotFoundException("No collection records found for this customer");
+        }
+        return mapToDTO(logs.get(0));
+    }
+
     @Transactional
     @org.springframework.cache.annotation.CacheEvict(value = "analytics", allEntries = true)
-    public void editLatestCollectionForCustomer(Long customerId, java.math.BigDecimal newAmount) {
+    public void editLatestCollectionForCustomer(Long customerId, java.math.BigDecimal newAmount, String paymentMode, String notes) {
         java.util.List<CollectionLog> logs = collectionLogRepository.findByCustomerIdOrderByCollectedAtDesc(customerId);
         if (logs.isEmpty()) {
             throw new ResourceNotFoundException("No collection records found for this customer");
@@ -250,6 +258,12 @@ public class CollectionService {
         latestLog.setAmountCollected(newAmount);
         latestLog.setRemainingAmount(newRemaining);
         latestLog.setStatusAfterCollection(newStatus);
+        if (paymentMode != null) {
+            latestLog.setPaymentMode(paymentMode);
+        }
+        if (notes != null) {
+            latestLog.setNotes(notes);
+        }
         collectionLogRepository.save(latestLog);
 
         // 4. Update the Customer

@@ -78,11 +78,20 @@ public class CollectionController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/customer/{customerId}/latest")
+    public ResponseEntity<ApiResponse<CollectionHistoryDTO>> getLatestCollectionForCustomer(@PathVariable Long customerId) {
+        CollectionHistoryDTO latest = collectionService.getLatestCollectionForCustomer(customerId);
+        return ResponseEntity.ok(ApiResponse.success("Latest collection fetched successfully", latest));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/customer/{customerId}/latest/edit")
     public ResponseEntity<ApiResponse<Void>> editLatestCollectionForCustomer(
             @PathVariable Long customerId,
-            @RequestParam java.math.BigDecimal amount) {
-        collectionService.editLatestCollectionForCustomer(customerId, amount);
+            @RequestParam java.math.BigDecimal amount,
+            @RequestParam(required = false) String paymentMode,
+            @RequestParam(required = false) String notes) {
+        collectionService.editLatestCollectionForCustomer(customerId, amount, paymentMode, notes);
         return ResponseEntity.ok(ApiResponse.success("Latest collection edited successfully", null));
     }
 }
