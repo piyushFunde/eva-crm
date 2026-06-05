@@ -149,11 +149,27 @@ public class BackupEmailService {
                 zos.putNextEntry(jsonEntry);
                 zos.write(jsonDumpBytes);
                 zos.closeEntry();
+
+                zos.finish();
             }
 
             byte[] zipArchiveBytes = zipBbos.toByteArray();
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
             String zipFilename = "crm_backup_" + timestamp + ".zip";
+
+            log.info("Backup ZIP file created. Size: {} bytes", zipArchiveBytes.length);
+
+            // Save a debug backup locally on the server disk for safety and validation
+            try {
+                java.nio.file.Path backupPath = java.nio.file.Paths.get("uploads/backups");
+                if (!java.nio.file.Files.exists(backupPath)) {
+                    java.nio.file.Files.createDirectories(backupPath);
+                }
+                java.nio.file.Files.write(backupPath.resolve(zipFilename), zipArchiveBytes);
+                log.info("Saved local backup copy to disk: uploads/backups/{}", zipFilename);
+            } catch (Exception writeEx) {
+                log.warn("Could not save local backup copy on disk (non-critical): {}", writeEx.getMessage());
+            }
 
             // 4. Construct email request body for Resend
             String emailBody = "<h3>EVA CRM System Backup Services</h3>" +
@@ -175,10 +191,11 @@ public class BackupEmailService {
             body.put("subject", "EVA CRM - Daily System Backup & Report (" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) + ")");
             body.put("html", emailBody);
 
-            // Resend attachment format: { content: "base64", filename: "name.zip" }
+            // Resend attachment format: { content: "base64", filename: "name.zip", contentType: "mime/type" }
             Map<String, Object> attachment = new HashMap<>();
             attachment.put("content", java.util.Base64.getEncoder().encodeToString(zipArchiveBytes));
             attachment.put("filename", zipFilename);
+            attachment.put("contentType", "application/zip");
             body.put("attachments", List.of(attachment));
 
             String jsonPayload = mapper.writeValueAsString(body);
