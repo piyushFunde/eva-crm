@@ -9,6 +9,7 @@ import com.eva.crm.repository.CustomerRepository;
 import com.eva.crm.service.DashboardService;
 import com.eva.crm.service.ExcelService;
 import com.eva.crm.service.UserService;
+import com.eva.crm.service.BackupEmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,6 +28,7 @@ public class AdminController {
     private final UserService userService;
     private final CustomerRepository customerRepository;
     private final CollectionLogRepository collectionLogRepository;
+    private final BackupEmailService backupEmailService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/team-performance")
@@ -102,6 +104,17 @@ public class AdminController {
             return ResponseEntity.ok(ApiResponse.success("Cleared " + deleted + " pending records successfully", null));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(ApiResponse.error("Failed to clear pending data: " + e.getMessage()));
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/backup/email-trigger")
+    public ResponseEntity<ApiResponse<String>> triggerBackupEmail() {
+        try {
+            backupEmailService.sendBackupEmail();
+            return ResponseEntity.ok(ApiResponse.success("Backup email triggered successfully", null));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(ApiResponse.error("Failed to trigger backup email: " + e.getMessage()));
         }
     }
 }

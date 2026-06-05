@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 @SpringBootApplication
 @EnableCaching
+@org.springframework.scheduling.annotation.EnableScheduling
 public class EvaCrmApplication {
 
     @jakarta.annotation.PostConstruct

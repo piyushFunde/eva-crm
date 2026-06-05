@@ -19,6 +19,7 @@ export default function Admin() {
 
   const [isUploading, setIsUploading] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [isBackupLoading, setIsBackupLoading] = useState(false);
   const [showClearModal, setShowClearModal] = useState(null); // 'all' | 'pending' | null
   const [clearConfirmText, setClearConfirmText] = useState('');
 
@@ -181,6 +182,46 @@ export default function Admin() {
                     }`}
                 >
                   {isUploading ? <><Loader2 className="w-5 h-5 animate-spin" />Parsing...</> : <><Upload className="w-4 h-4" />Process Dataset</>}
+                </button>
+              </div>
+
+              {/* ── System Backup ────────────────────────────── */}
+              <div className="glass-card !p-8 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#4ECDC4]/10 blur-[60px] -mr-16 -mt-16 group-hover:bg-[#4ECDC4]/20 transition-all duration-700" />
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 bg-[#4ECDC4]/10 rounded-2xl flex items-center justify-center border border-[#4ECDC4]/10">
+                    <DatabaseZap className="w-6 h-6 text-[#4ECDC4]" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black text-white/40 uppercase tracking-[0.2em]">Maintenance</h3>
+                    <p className="text-lg font-black text-white tracking-tight mt-1">System Backup</p>
+                  </div>
+                </div>
+                <p className="text-[11px] font-bold text-white/40 uppercase tracking-wide leading-relaxed">
+                  Triggers an instant database JSON dump and collection Excel report. The resulting ZIP archive is securely emailed to the company backup address.
+                </p>
+                <button
+                  onClick={async () => {
+                    setIsBackupLoading(true);
+                    try {
+                      const res = await api.post('/admin/backup/email-trigger');
+                      if (res.success) {
+                        toast.success('Backup email triggered successfully!');
+                      }
+                    } catch (err) {
+                      toast.error(err.message || 'Failed to trigger backup');
+                    } finally {
+                      setIsBackupLoading(false);
+                    }
+                  }}
+                  disabled={isBackupLoading}
+                  className="w-full mt-6 h-14 rounded-2xl bg-[#0F1923] text-white border border-white/5 font-black text-[11px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-white/5 hover:border-white/20 active:scale-[0.98] transition-all"
+                >
+                  {isBackupLoading ? (
+                    <><Loader2 className="w-5 h-5 animate-spin" />Sending Backup...</>
+                  ) : (
+                    <><Share className="w-4 h-4 text-[#4ECDC4]" />Email Backup Now</>
+                  )}
                 </button>
               </div>
 
