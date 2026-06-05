@@ -35,13 +35,18 @@ export default function CollectionModal({ customer, onClose, isEdit = false }) {
   const { deviceId } = useAuthStore();
   const { isOnline } = useNetworkStore();
   const [editLoading, setEditLoading] = useState(false);
+  const [latestTransaction, setLatestTransaction] = useState(null);
 
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, setValue, watch, setError, formState: { errors } } = useForm({
     resolver: zodResolver(collectionSchema),
     defaultValues: { amount: (customer?.pendingAmount ?? customer?.emiAmount) || '', notes: '' }
   });
 
   const watchedAmount = watch('amount');
+
+  const maxLimit = isEdit
+    ? (latestTransaction?.previousPendingAmount ?? customer?.pendingAmount ?? customer?.emiAmount ?? 0)
+    : (customer?.pendingAmount ?? customer?.emiAmount ?? 0);
 
   useEffect(() => {
     if (isEdit && customer) {
@@ -52,6 +57,7 @@ export default function CollectionModal({ customer, onClose, isEdit = false }) {
             setValue('amount', res.data.amountCollected || '');
             setValue('notes', res.data.notes || '');
             setPaymentMode(res.data.paymentMode || 'CASH');
+            setLatestTransaction(res.data);
           }
         })
         .catch(err => {
@@ -76,6 +82,17 @@ export default function CollectionModal({ customer, onClose, isEdit = false }) {
   };
 
   const onSubmit = async (data) => {
+    const amountVal = parseFloat(data.amount);
+    if (isNaN(amountVal) || amountVal <= 0) {
+      setError('amount', { type: 'manual', message: 'Amount must be greater than 0' });
+      return;
+    }
+    if (amountVal > maxLimit) {
+      toast.error(`Amount cannot exceed the pending balance of ₹${maxLimit}`);
+      setError('amount', { type: 'manual', message: `Maximum allowed is ₹${maxLimit}` });
+      return;
+    }
+
     if (isEdit) {
       setEditLoading(true);
       try {
@@ -189,7 +206,7 @@ export default function CollectionModal({ customer, onClose, isEdit = false }) {
                 <label className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em]">Transaction Value</label>
                 <div className="flex items-center gap-1.5 text-[#4ECDC4] text-[10px] font-bold uppercase">
                   <Info size={12} />
-                  {isEdit ? "Editing Latest Payment" : `Max: ${formatCurrency(customer.pendingAmount ?? customer.emiAmount)}`}
+                  {`Max: ${formatCurrency(maxLimit)}`}
                 </div>
               </div>
               <div className="relative group">
@@ -199,10 +216,20 @@ export default function CollectionModal({ customer, onClose, isEdit = false }) {
                 <input
                   type="number"
                   placeholder="0.00"
-                  className="w-full bg-white/[0.03] border-2 border-white/5 rounded-2xl py-6 pl-14 pr-6 text-3xl font-black text-white placeholder:text-white/5 outline-none focus:border-[#4ECDC4]/50 focus:bg-white/[0.06] transition-all"
+                  className={`w-full bg-white/[0.03] border-2 rounded-2xl py-6 pl-14 pr-6 text-3xl font-black text-white placeholder:text-white/5 outline-none focus:bg-white/[0.06] transition-all ${
+                    errors.amount 
+                      ? 'border-red-500/50 focus:border-red-500' 
+                      : 'border-white/5 focus:border-[#4ECDC4]/50'
+                  }`}
                   {...register('amount')}
                 />
               </div>
+              {errors.amount && (
+                <p className="text-red-500 text-xs font-bold mt-1.5 ml-1 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full inline-block animate-ping" />
+                  {errors.amount.message}
+                </p>
+              )}
               {/* Intelligent Chips */}
               {!isEdit && (
                 <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">

@@ -50,6 +50,12 @@ public class CollectionService {
         }
 
         java.math.BigDecimal previousPending = customer.getPendingAmount() != null ? customer.getPendingAmount() : customer.getEmiAmount();
+        if (previousPending == null) {
+            previousPending = java.math.BigDecimal.ZERO;
+        }
+        if (request.getAmountCollected().compareTo(previousPending) > 0) {
+            throw new IllegalArgumentException("Amount collected (₹" + request.getAmountCollected() + ") cannot exceed the pending bill amount of ₹" + previousPending);
+        }
         java.math.BigDecimal remaining = previousPending.subtract(request.getAmountCollected());
         String newStatus;
 
@@ -240,6 +246,12 @@ public class CollectionService {
         java.math.BigDecimal previousPending = latestLog.getPreviousPendingAmount();
         if (previousPending == null) {
             previousPending = customer.getEmiAmount();
+        }
+        if (previousPending == null) {
+            previousPending = java.math.BigDecimal.ZERO;
+        }
+        if (newAmount.compareTo(previousPending) > 0) {
+            throw new IllegalArgumentException("Amount collected (₹" + newAmount + ") cannot exceed the previous pending amount of ₹" + previousPending);
         }
 
         // 2. Calculate the new remaining amount
