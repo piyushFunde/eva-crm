@@ -22,22 +22,6 @@ spring:
 
   allowed-origins: ${ALLOWED_ORIGINS:https://crm.evagroups.in}
 
-  mail:
-    host: ${SPRING_MAIL_HOST}
-    port: ${SPRING_MAIL_PORT:587}
-    username: ${SPRING_MAIL_USERNAME}
-    password: ${SPRING_MAIL_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          connectiontimeout: 10000
-          timeout: 10000
-          writetimeout: 10000
-          starttls:
-            enable: true
-            required: true
-
 app:
   admin-recovery-key: ${ADMIN_RECOVERY_KEY:EVA-ADMIN-SAFE-2024}
   jwt:
@@ -49,6 +33,8 @@ app:
   allowed-origins: ${ALLOWED_ORIGINS:https://crm.evagroups.in}
   backup-email: ${COMPANY_BACKUP_EMAIL}
   backup-cron: ${APP_BACKUP_CRON:0 0 0 * * ?}
+  resend-api-key: ${RESEND_API_KEY:}
+  sender-email: ${SENDER_EMAIL:onboarding@resend.dev}
 
 # Enable Gzip Response Compression
 server:

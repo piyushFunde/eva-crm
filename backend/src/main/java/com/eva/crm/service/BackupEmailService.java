@@ -7,13 +7,9 @@ import com.eva.crm.repository.CollectionLogRepository;
 import com.eva.crm.repository.CustomerRepository;
 import com.eva.crm.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.mail.internet.MimeMessage;
-import jakarta.mail.util.ByteArrayDataSource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -38,13 +34,15 @@ public class BackupEmailService {
     private final CustomerRepository customerRepository;
     private final CollectionLogRepository collectionLogRepository;
     private final ExportService exportService;
-    private final JavaMailSender mailSender;
 
     @Value("${app.backup-email}")
     private String recipientEmail;
 
-    @Value("${spring.mail.username:}")
+    @Value("${app.sender-email:onboarding@resend.dev}")
     private String senderEmail;
+
+    @Value("${app.resend-api-key:}")
+    private String resendApiKey;
 
     /**
      * Generates a structural JSON dump of users, customers, and collection logs
@@ -112,7 +110,7 @@ public class BackupEmailService {
 
     /**
      * Packages the Excel collection report and the database JSON dump into a single ZIP archive,
-     * then emails it to the configured company email address.
+     * then emails it using the Resend HTTPS API.
      */
     public void sendBackupEmail() {
         if (recipientEmail == null || recipientEmail.trim().isEmpty() || recipientEmail.equals("test@example.com")) {
@@ -120,12 +118,15 @@ public class BackupEmailService {
             throw new IllegalArgumentException("Recipient email is not configured or set to default (test@example.com)");
         }
 
-        log.info("Generating scheduled database backup ZIP for email transmission to: {}", recipientEmail);
+        if (resendApiKey == null || resendApiKey.trim().isEmpty()) {
+            log.warn("Resend API Key is not configured. Skipping backup email send.");
+            throw new IllegalArgumentException("Resend API Key is not configured. Please set the RESEND_API_KEY environment variable.");
+        }
+
+        log.info("Generating database backup ZIP and sending via Resend API to: {}", recipientEmail);
 
         try {
             // 1. Get Excel report bytes
-            // We pass a system dummy user object for audit purposes or null. 
-            // In ExportService.java, User is only used for logging/records, so we can pass a dummy system admin.
             User systemAdmin = userRepository.findByRole(com.eva.crm.entity.Role.ROLE_ADMIN)
                     .stream().findFirst().orElse(null);
             byte[] excelReportBytes = exportService.exportCollectionsToExcel(systemAdmin);
@@ -154,15 +155,7 @@ public class BackupEmailService {
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
             String zipFilename = "crm_backup_" + timestamp + ".zip";
 
-            // 4. Send the Email
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            String sender = (senderEmail != null && !senderEmail.trim().isEmpty()) ? senderEmail : "noreply@evagroups.in";
-            helper.setFrom(sender);
-            helper.setTo(recipientEmail);
-            helper.setSubject("EVA CRM - Daily System Backup & Report (" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) + ")");
-            
+            // 4. Construct email request body for Resend
             String emailBody = "<h3>EVA CRM System Backup Services</h3>" +
                     "<p>Hello,</p>" +
                     "<p>Attached is the automated daily backup of your EVA CRM database records, generated on <b>" + 
@@ -174,17 +167,41 @@ public class BackupEmailService {
                     "</ul>" +
                     "<br/>" +
                     "<p><i>This is an automated system message. Please do not reply directly to this email.</i></p>";
-            
-            helper.setText(emailBody, true);
 
-            ByteArrayDataSource zipDataSource = new ByteArrayDataSource(zipArchiveBytes, "application/zip");
-            helper.addAttachment(zipFilename, zipDataSource);
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, Object> body = new HashMap<>();
+            body.put("from", senderEmail);
+            body.put("to", List.of(recipientEmail));
+            body.put("subject", "EVA CRM - Daily System Backup & Report (" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) + ")");
+            body.put("html", emailBody);
 
-            mailSender.send(message);
-            log.info("System backup ZIP sent successfully to: {}", recipientEmail);
+            // Resend attachment format: { content: "base64", filename: "name.zip" }
+            Map<String, Object> attachment = new HashMap<>();
+            attachment.put("content", java.util.Base64.getEncoder().encodeToString(zipArchiveBytes));
+            attachment.put("filename", zipFilename);
+            body.put("attachments", List.of(attachment));
+
+            String jsonPayload = mapper.writeValueAsString(body);
+
+            // 5. Send POST request to Resend API
+            java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+            java.net.http.HttpRequest httpRequest = java.net.http.HttpRequest.newBuilder()
+                    .uri(java.net.URI.create("https://api.resend.com/emails"))
+                    .header("Authorization", "Bearer " + resendApiKey)
+                    .header("Content-Type", "application/json")
+                    .POST(java.net.http.HttpRequest.BodyPublishers.ofString(jsonPayload))
+                    .build();
+
+            java.net.http.HttpResponse<String> httpResponse = client.send(httpRequest, java.net.http.HttpResponse.BodyHandlers.ofString());
+
+            if (httpResponse.statusCode() == 200 || httpResponse.statusCode() == 201) {
+                log.info("System backup ZIP sent successfully via Resend API to: {}", recipientEmail);
+            } else {
+                throw new RuntimeException("Resend API error status: " + httpResponse.statusCode() + " - " + httpResponse.body());
+            }
 
         } catch (Exception e) {
-            log.error("Failed to generate or send the scheduled backup email", e);
+            log.error("Failed to generate or send the backup email via Resend API", e);
             throw new RuntimeException("Email delivery failed: " + e.getMessage(), e);
         }
     }

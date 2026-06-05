@@ -24,19 +24,5 @@ app:
       private-key: 4WJbPppAK72t-3MUjZSyeNKbrCD4NROjwtvqtNe81WE
   backup-email: ${COMPANY_BACKUP_EMAIL:test@example.com}
   backup-cron: ${APP_BACKUP_CRON:0 0 0 * * ?}
-
-spring:
-  mail:
-    host: ${SPRING_MAIL_HOST:localhost}
-    port: ${SPRING_MAIL_PORT:1025}
-    username: ${SPRING_MAIL_USERNAME:}
-    password: ${SPRING_MAIL_PASSWORD:}
-    properties:
-      mail:
-        smtp:
-          auth: false
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
-          starttls:
-            enable: false
+  resend-api-key: ${RESEND_API_KEY:}
+  sender-email: ${SENDER_EMAIL:onboarding@resend.dev}
