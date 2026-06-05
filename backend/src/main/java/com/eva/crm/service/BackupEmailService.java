@@ -117,7 +117,7 @@ public class BackupEmailService {
     public void sendBackupEmail() {
         if (recipientEmail == null || recipientEmail.trim().isEmpty() || recipientEmail.equals("test@example.com")) {
             log.warn("Recipient email is not configured or set to default (test@example.com). Skipping backup email send.");
-            return;
+            throw new IllegalArgumentException("Recipient email is not configured or set to default (test@example.com)");
         }
 
         log.info("Generating scheduled database backup ZIP for email transmission to: {}", recipientEmail);
@@ -185,6 +185,7 @@ public class BackupEmailService {
 
         } catch (Exception e) {
             log.error("Failed to generate or send the scheduled backup email", e);
+            throw new RuntimeException("Email delivery failed: " + e.getMessage(), e);
         }
     }
 
