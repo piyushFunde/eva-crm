@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import {
   Upload, TrendingUp, FileSpreadsheet, IndianRupee, Info, CheckCircle,
   Loader2, Users, Target, ShieldCheck, Trash2, X, Lock, User as UserIcon,
-  Activity, Share, AlertTriangle, DatabaseZap
+  Activity, Share, AlertTriangle, DatabaseZap, Download
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,6 +20,7 @@ export default function Admin() {
   const [isUploading, setIsUploading] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [isBackupLoading, setIsBackupLoading] = useState(false);
+  const [isDownloadingBackup, setIsDownloadingBackup] = useState(false);
   const [showClearModal, setShowClearModal] = useState(null); // 'all' | 'pending' | null
   const [clearConfirmText, setClearConfirmText] = useState('');
 
@@ -200,29 +201,64 @@ export default function Admin() {
                 <p className="text-[11px] font-bold text-white/40 uppercase tracking-wide leading-relaxed">
                   Triggers an instant database JSON dump and collection Excel report. The resulting ZIP archive is securely emailed to the company backup address.
                 </p>
-                <button
-                  onClick={async () => {
-                    setIsBackupLoading(true);
-                    try {
-                      const res = await api.post('/admin/backup/email-trigger');
-                      if (res.success) {
-                        toast.success('Backup email triggered successfully!');
+                <div className="flex flex-col gap-3 mt-6">
+                  <button
+                    onClick={async () => {
+                      setIsBackupLoading(true);
+                      try {
+                        const res = await api.post('/admin/backup/email-trigger');
+                        if (res.success) {
+                          toast.success('Backup email triggered successfully!');
+                        }
+                      } catch (err) {
+                        toast.error(err.message || 'Failed to trigger backup');
+                      } finally {
+                        setIsBackupLoading(false);
                       }
-                    } catch (err) {
-                      toast.error(err.message || 'Failed to trigger backup');
-                    } finally {
-                      setIsBackupLoading(false);
-                    }
-                  }}
-                  disabled={isBackupLoading}
-                  className="w-full mt-6 h-14 rounded-2xl bg-[#0F1923] text-white border border-white/5 font-black text-[11px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-white/5 hover:border-white/20 active:scale-[0.98] transition-all"
-                >
-                  {isBackupLoading ? (
-                    <><Loader2 className="w-5 h-5 animate-spin" />Sending Backup...</>
-                  ) : (
-                    <><Share className="w-4 h-4 text-[#4ECDC4]" />Email Backup Now</>
-                  )}
-                </button>
+                    }}
+                    disabled={isBackupLoading || isDownloadingBackup}
+                    className="w-full h-14 rounded-2xl bg-[#0F1923] text-white border border-white/5 font-black text-[11px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-white/5 hover:border-white/20 active:scale-[0.98] transition-all disabled:opacity-50"
+                  >
+                    {isBackupLoading ? (
+                      <><Loader2 className="w-5 h-5 animate-spin" />Sending Backup...</>
+                    ) : (
+                      <><Share className="w-4 h-4 text-[#4ECDC4]" />Email Backup Now</>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={async () => {
+                      setIsDownloadingBackup(true);
+                      try {
+                        const response = await api.get('/admin/backup/download-latest', {
+                          responseType: 'blob'
+                        });
+                        const blob = new Blob([response], { type: 'application/zip' });
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.setAttribute('download', `crm_backup_${new Date().toISOString().slice(0, 10)}.zip`);
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        window.URL.revokeObjectURL(url);
+                        toast.success('Latest backup downloaded successfully!');
+                      } catch (err) {
+                        toast.error('Download failed or no backups found on server');
+                      } finally {
+                        setIsDownloadingBackup(false);
+                      }
+                    }}
+                    disabled={isBackupLoading || isDownloadingBackup}
+                    className="w-full h-14 rounded-2xl bg-[#0F1923] text-white border border-white/5 font-black text-[11px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-white/5 hover:border-white/20 active:scale-[0.98] transition-all disabled:opacity-50"
+                  >
+                    {isDownloadingBackup ? (
+                      <><Loader2 className="w-5 h-5 animate-spin" />Downloading...</>
+                    ) : (
+                      <><Download className="w-4 h-4 text-[#4ECDC4]" />Download Latest Backup</>
+                    )}
+                  </button>
+                </div>
               </div>
 
               {/* ── Danger Zone: Bulk Delete ─────────────────── */}

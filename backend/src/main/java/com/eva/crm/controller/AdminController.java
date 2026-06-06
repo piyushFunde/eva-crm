@@ -117,4 +117,43 @@ public class AdminController {
             return ResponseEntity.internalServerError().body(ApiResponse.error("Failed to trigger backup email: " + e.getMessage()));
         }
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/backup/download-latest")
+    public ResponseEntity<org.springframework.core.io.Resource> downloadLatestBackup() {
+        try {
+            java.io.File directory = new java.io.File("uploads/backups");
+            if (!directory.exists() || !directory.isDirectory()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            java.io.File[] files = directory.listFiles((dir, name) -> name.startsWith("crm_backup_") && name.endsWith(".zip"));
+            if (files == null || files.length == 0) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Find the most recently modified file
+            java.io.File latestFile = java.util.Arrays.stream(files)
+                    .max(java.util.Comparator.comparingLong(java.io.File::lastModified))
+                    .orElse(null);
+
+            if (latestFile == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            java.nio.file.Path path = latestFile.toPath();
+            org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(path.toUri());
+
+            if (!resource.exists() || !resource.isReadable()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM)
+                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + latestFile.getName() + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }
