@@ -61,4 +61,8 @@ public interface CollectionLogRepository extends JpaRepository<CollectionLog, Lo
 
     @Query("SELECT DISTINCT c.customer.id FROM CollectionLog c WHERE c.executive.id = :executiveId AND c.collectedAt >= :startOfDay")
     List<Long> findCustomerIdsWithCollectionsTodayByExecutive(@Param("executiveId") Long executiveId, @Param("startOfDay") LocalDateTime startOfDay);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM CollectionLog c WHERE c.statusAfterCollection = 'COMPLETED' AND c.collectedAt < :cutoff")
+    int deleteCompletedOlderThan(@Param("cutoff") LocalDateTime cutoff);
 }

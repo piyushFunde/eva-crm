@@ -107,6 +107,23 @@ public class AdminController {
         }
     }
 
+    /** Delete COMPLETED collection log entries that are older than 7 days */
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/collections/completed-old")
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "analytics", allEntries = true)
+    public ResponseEntity<ApiResponse<String>> deleteOldCompletedCollections() {
+        try {
+            java.time.LocalDateTime cutoff = java.time.LocalDateTime.now().minusDays(7);
+            int deleted = collectionLogRepository.deleteCompletedOlderThan(cutoff);
+            return ResponseEntity.ok(ApiResponse.success(
+                    "Deleted " + deleted + " completed payment records older than 7 days", null));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(
+                    ApiResponse.error("Failed to delete old completed records: " + e.getMessage()));
+        }
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/backup/email-trigger")
     public ResponseEntity<ApiResponse<String>> triggerBackupEmail() {

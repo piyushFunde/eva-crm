@@ -19,9 +19,10 @@ export default function Admin() {
 
   const [isUploading, setIsUploading] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [isDeletingCompleted, setIsDeletingCompleted] = useState(false);
   const [isBackupLoading, setIsBackupLoading] = useState(false);
   const [isDownloadingBackup, setIsDownloadingBackup] = useState(false);
-  const [showClearModal, setShowClearModal] = useState(null); // 'all' | 'pending' | null
+  const [showClearModal, setShowClearModal] = useState(null); // 'all' | 'pending' | 'completed' | null
   const [clearConfirmText, setClearConfirmText] = useState('');
 
   const { stats, fetchDashboardStats, teamPerformance, fetchTeamPerformance } = useDashboardStore();
@@ -80,6 +81,23 @@ export default function Admin() {
       toast.error(error.message || 'Failed to clear data');
     } finally {
       setIsClearing(false);
+      setShowClearModal(null);
+      setClearConfirmText('');
+    }
+  };
+
+  const handleDeleteOldCompleted = async () => {
+    setIsDeletingCompleted(true);
+    try {
+      const response = await api.delete('/admin/collections/completed-old');
+      if (response.success) {
+        toast.success(response.message || 'Old completed payments deleted!');
+        fetchDashboardStats();
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to delete old completed payments');
+    } finally {
+      setIsDeletingCompleted(false);
       setShowClearModal(null);
       setClearConfirmText('');
     }
@@ -289,8 +307,15 @@ export default function Admin() {
                     Clear All Data
                   </button>
                 </div>
+                <button
+                  onClick={() => { setShowClearModal('completed'); setClearConfirmText(''); }}
+                  className="w-full mt-3 flex items-center justify-center gap-2 h-11 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20 font-black text-[10px] uppercase tracking-widest hover:bg-orange-500/20 transition-all"
+                >
+                  <Trash2 size={14} />
+                  Delete Completed Payments (7+ Days Old)
+                </button>
                 <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest mt-3 text-center">
-                  Pending Only = keeps collection history · All Data = full reset
+                  Pending Only = keeps history · All Data = full reset · Orange = old completed logs only
                 </p>
               </div>
 
@@ -429,41 +454,69 @@ export default function Admin() {
                 <X size={20} />
               </button>
               <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-400 mx-auto mb-6 border border-red-500/20">
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 border ${
+                  showClearModal === 'completed'
+                    ? 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                    : 'bg-red-500/10 text-red-400 border-red-500/20'
+                }`}>
                   <AlertTriangle size={32} />
                 </div>
                 <h3 className="text-2xl font-black text-white tracking-tighter">
-                  {showClearModal === 'all' ? 'Clear All Data?' : 'Clear Pending Data?'}
+                  {showClearModal === 'all' ? 'Clear All Data?'
+                    : showClearModal === 'completed' ? 'Delete Old Completed Payments?'
+                    : 'Clear Pending Data?'}
                 </h3>
                 <p className="text-[11px] font-black text-white/30 uppercase tracking-widest mt-3">
                   {showClearModal === 'all'
                     ? 'Permanently deletes ALL customers and collection history'
+                    : showClearModal === 'completed'
+                    ? 'Deletes COMPLETED payment logs that are 7+ days old. Customer records are kept.'
                     : 'Deletes PENDING customers only — collected history is kept'}
                 </p>
               </div>
               <div className="space-y-4">
                 <p className="text-[11px] font-black text-white/40 uppercase tracking-widest text-center">
-                  Type <span className="text-red-400 font-black">{showClearModal === 'all' ? 'DELETE' : 'CLEAR'}</span> to confirm
+                  Type{' '}
+                  <span className={`font-black ${
+                    showClearModal === 'completed' ? 'text-orange-400' : 'text-red-400'
+                  }`}>
+                    {showClearModal === 'all' ? 'DELETE' : showClearModal === 'completed' ? 'PURGE' : 'CLEAR'}
+                  </span>{' '}to confirm
                 </p>
                 <input
                   type="text"
-                  placeholder={showClearModal === 'all' ? 'DELETE' : 'CLEAR'}
+                  placeholder={showClearModal === 'all' ? 'DELETE' : showClearModal === 'completed' ? 'PURGE' : 'CLEAR'}
                   value={clearConfirmText}
                   onChange={(e) => setClearConfirmText(e.target.value.toUpperCase())}
-                  className="w-full bg-red-500/5 border border-red-500/20 rounded-xl py-4 px-5 text-sm font-bold text-white outline-none focus:border-red-500/50 transition-all text-center tracking-[0.3em]"
+                  className={`w-full rounded-xl py-4 px-5 text-sm font-bold text-white outline-none transition-all text-center tracking-[0.3em] ${
+                    showClearModal === 'completed'
+                      ? 'bg-orange-500/5 border border-orange-500/20 focus:border-orange-500/50'
+                      : 'bg-red-500/5 border border-red-500/20 focus:border-red-500/50'
+                  }`}
                 />
                 <button
-                  onClick={() => handleClearData(showClearModal)}
+                  onClick={() => {
+                    if (showClearModal === 'completed') handleDeleteOldCompleted();
+                    else handleClearData(showClearModal);
+                  }}
                   disabled={
-                    isClearing ||
-                    (showClearModal === 'all' && clearConfirmText !== 'DELETE') ||
-                    (showClearModal === 'pending' && clearConfirmText !== 'CLEAR')
+                    (showClearModal === 'completed' && (isDeletingCompleted || clearConfirmText !== 'PURGE')) ||
+                    (showClearModal === 'all' && (isClearing || clearConfirmText !== 'DELETE')) ||
+                    (showClearModal === 'pending' && (isClearing || clearConfirmText !== 'CLEAR'))
                   }
-                  className="w-full h-14 rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] transition-all mt-2 disabled:opacity-30 disabled:cursor-not-allowed bg-red-500 text-white hover:bg-red-600 active:scale-[0.98] flex items-center justify-center gap-3"
+                  className={`w-full h-14 rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] transition-all mt-2 disabled:opacity-30 disabled:cursor-not-allowed text-white active:scale-[0.98] flex items-center justify-center gap-3 ${
+                    showClearModal === 'completed'
+                      ? 'bg-orange-500 hover:bg-orange-600'
+                      : 'bg-red-500 hover:bg-red-600'
+                  }`}
                 >
-                  {isClearing
+                  {(isClearing || isDeletingCompleted)
                     ? <><Loader2 className="w-5 h-5 animate-spin" />Deleting...</>
-                    : <><Trash2 className="w-4 h-4" />{showClearModal === 'all' ? 'Delete Everything' : 'Clear Pending'}</>
+                    : <><Trash2 className="w-4 h-4" />
+                        {showClearModal === 'all' ? 'Delete Everything'
+                          : showClearModal === 'completed' ? 'Purge Old Completed'
+                          : 'Clear Pending'}
+                      </>
                   }
                 </button>
               </div>
