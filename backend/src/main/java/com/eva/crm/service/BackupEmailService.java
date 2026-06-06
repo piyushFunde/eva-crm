@@ -111,7 +111,10 @@ public class BackupEmailService {
     /**
      * Packages the Excel collection report and the database JSON dump into a single ZIP archive,
      * then emails it using the Resend HTTPS API.
+     * @Transactional keeps the Hibernate session open so lazy-loaded entity proxies
+     * (like User.getFullName()) can be resolved when called from the scheduled task context.
      */
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public void sendBackupEmail() {
         if (recipientEmail == null || recipientEmail.trim().isEmpty() || recipientEmail.equals("test@example.com")) {
             log.warn("Recipient email is not configured or set to default (test@example.com). Skipping backup email send.");
