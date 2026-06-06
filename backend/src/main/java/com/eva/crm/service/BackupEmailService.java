@@ -111,10 +111,7 @@ public class BackupEmailService {
     /**
      * Packages the Excel collection report and the database JSON dump into a single ZIP archive,
      * then emails it using the Resend HTTPS API.
-     * @Transactional keeps the Hibernate session open so lazy-loaded entity proxies
-     * (like User.getFullName()) can be resolved when called from the scheduled task context.
      */
-    @org.springframework.transaction.annotation.Transactional
     public void sendBackupEmail() {
         if (recipientEmail == null || recipientEmail.trim().isEmpty() || recipientEmail.equals("test@example.com")) {
             log.warn("Recipient email is not configured or set to default (test@example.com). Skipping backup email send.");
@@ -231,7 +228,11 @@ public class BackupEmailService {
 
     /**
      * Executes the backup scheduled task according to the cron expression configured.
+     * @Transactional is placed HERE (not on sendBackupEmail) because Spring's scheduler
+     * calls this method through the AOP proxy, so the transaction opens correctly.
+     * A direct this.sendBackupEmail() call from within would bypass the proxy and ignore @Transactional.
      */
+    @org.springframework.transaction.annotation.Transactional
     @Scheduled(cron = "${app.backup-cron}")
     public void scheduledBackupTrigger() {
         log.warn("Triggering scheduled automated CRM backup email run... Cron: ${app.backup-cron}");
