@@ -156,4 +156,25 @@ public class AdminController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/backup/logs")
+    public ResponseEntity<String> getBackupLogs() {
+        try {
+            java.io.File logFile = new java.io.File("logs/eva-crm.log");
+            if (!logFile.exists() || !logFile.isFile()) {
+                return ResponseEntity.ok("Log file not found at: " + logFile.getAbsolutePath());
+            }
+
+            java.util.List<String> lines = java.nio.file.Files.readAllLines(logFile.toPath());
+            int start = Math.max(0, lines.size() - 200);
+            StringBuilder sb = new StringBuilder();
+            for (int i = start; i < lines.size(); i++) {
+                sb.append(lines.get(i)).append("\n");
+            }
+            return ResponseEntity.ok(sb.toString());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Failed to read log file: " + e.getMessage());
+        }
+    }
 }

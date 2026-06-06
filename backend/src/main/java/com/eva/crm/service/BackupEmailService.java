@@ -123,7 +123,7 @@ public class BackupEmailService {
             throw new IllegalArgumentException("Resend API Key is not configured. Please set the RESEND_API_KEY environment variable.");
         }
 
-        log.info("Generating database backup ZIP and sending via Resend API to: {}", recipientEmail);
+        log.warn("Generating database backup ZIP and sending via Resend API to: {}", recipientEmail);
 
         try {
             // 1. Get Excel report bytes
@@ -157,7 +157,7 @@ public class BackupEmailService {
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
             String zipFilename = "crm_backup_" + timestamp + ".zip";
 
-            log.info("Backup ZIP file created. Size: {} bytes", zipArchiveBytes.length);
+            log.warn("Backup ZIP file created. Size: {} bytes", zipArchiveBytes.length);
 
             // Save a debug backup locally on the server disk for safety and validation
             try {
@@ -166,7 +166,7 @@ public class BackupEmailService {
                     java.nio.file.Files.createDirectories(backupPath);
                 }
                 java.nio.file.Files.write(backupPath.resolve(zipFilename), zipArchiveBytes);
-                log.info("Saved local backup copy to disk: uploads/backups/{}", zipFilename);
+                log.warn("Saved local backup copy to disk: uploads/backups/{}", zipFilename);
             } catch (Exception writeEx) {
                 log.warn("Could not save local backup copy on disk (non-critical): {}", writeEx.getMessage());
             }
@@ -215,7 +215,7 @@ public class BackupEmailService {
             java.net.http.HttpResponse<String> httpResponse = client.send(httpRequest, java.net.http.HttpResponse.BodyHandlers.ofString());
 
             if (httpResponse.statusCode() == 200 || httpResponse.statusCode() == 201) {
-                log.info("System backup ZIP sent successfully via Resend API to: {}", recipientEmail);
+                log.warn("System backup ZIP sent successfully via Resend API to: {}", recipientEmail);
             } else {
                 throw new RuntimeException("Resend API error status: " + httpResponse.statusCode() + " - " + httpResponse.body());
             }
@@ -231,7 +231,12 @@ public class BackupEmailService {
      */
     @Scheduled(cron = "${app.backup-cron}")
     public void scheduledBackupTrigger() {
-        log.info("Triggering scheduled automated CRM backup email run...");
-        sendBackupEmail();
+        log.warn("Triggering scheduled automated CRM backup email run... Cron: ${app.backup-cron}");
+        try {
+            sendBackupEmail();
+            log.warn("Scheduled automated CRM backup email completed successfully.");
+        } catch (Exception e) {
+            log.error("Scheduled automated CRM backup email failed!", e);
+        }
     }
 }
