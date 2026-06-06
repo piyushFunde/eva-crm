@@ -201,11 +201,14 @@ public class BackupEmailService {
             String jsonPayload = mapper.writeValueAsString(body);
 
             // 5. Send POST request to Resend API
-            java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+            java.net.http.HttpClient client = java.net.http.HttpClient.newBuilder()
+                    .connectTimeout(java.time.Duration.ofSeconds(10))
+                    .build();
             java.net.http.HttpRequest httpRequest = java.net.http.HttpRequest.newBuilder()
                     .uri(java.net.URI.create("https://api.resend.com/emails"))
                     .header("Authorization", "Bearer " + resendApiKey)
                     .header("Content-Type", "application/json")
+                    .timeout(java.time.Duration.ofSeconds(10))
                     .POST(java.net.http.HttpRequest.BodyPublishers.ofString(jsonPayload))
                     .build();
 
