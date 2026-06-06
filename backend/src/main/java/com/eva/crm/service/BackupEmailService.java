@@ -114,7 +114,7 @@ public class BackupEmailService {
      * @Transactional keeps the Hibernate session open so lazy-loaded entity proxies
      * (like User.getFullName()) can be resolved when called from the scheduled task context.
      */
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @org.springframework.transaction.annotation.Transactional
     public void sendBackupEmail() {
         if (recipientEmail == null || recipientEmail.trim().isEmpty() || recipientEmail.equals("test@example.com")) {
             log.warn("Recipient email is not configured or set to default (test@example.com). Skipping backup email send.");
