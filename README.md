@@ -4,9 +4,12 @@ EVA CRM is a state-of-the-art, mobile-first Progressive Web Application (PWA) de
 
 🌐 **Live Website:** [https://crm.evagroups.in/](https://crm.evagroups.in/)
 
+## System Architecture
+<img width="5041" height="6347" alt="diagram (2)" src="https://github.com/user-attachments/assets/bf1cc0c4-38c0-4159-9841-a744c7a9db97" />
+
 ---
 
-## 🏗️ System Architecture & Data Flow
+## Data Flow
 
 ```mermaid
 graph TD
