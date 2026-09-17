@@ -4,25 +4,11 @@ EVA CRM is a state-of-the-art, mobile-first Progressive Web Application (PWA) de
 
 🌐 **Live Website:** [https://crm.evagroups.in/](https://crm.evagroups.in/)
 
+---
 ## System Architecture
 <img width="5041" height="6347" alt="diagram (2)" src="https://github.com/user-attachments/assets/bf1cc0c4-38c0-4159-9841-a744c7a9db97" />
 
 ---
-
-## Data Flow
-
-```mermaid
-graph TD
-    Client[Mobile PWA Client / React] <-->|Secure JSON / HTTPS| Gateway[Spring Security Gateway / BCrypt]
-    Client <-->|Live Updates / SockJS| WS[WebSocket Broker]
-    Gateway -->|Rate Limiter & Auth Protection| Auth[AuthController]
-    Gateway -->|Operations Control| Service[Customer/Collection Services]
-    Service -->|Atomic Transaction Management| DB[(MySQL 8.0 Database)]
-    Service -->|Offline Backup Sync| Sync[Sync Engine / IndexedDB]
-```
-
----
-
 ## ⚡ Key Highlights & Features
 
 1. **Zero-Touch Ingestion:** Excel uploaded customer sheets auto-register missing executive agents with default secure `ROLE_EXECUTIVE` logins.
@@ -70,6 +56,18 @@ To run the application, configure the following variables inside `.env` files:
 | `VITE_WS_URL` | WebSockets handshake URL | `http://localhost:8080/ws` |
 
 ---
+
+## Data Flow
+
+```mermaid
+graph TD
+    Client[Mobile PWA Client / React] <-->|Secure JSON / HTTPS| Gateway[Spring Security Gateway / BCrypt]
+    Client <-->|Live Updates / SockJS| WS[WebSocket Broker]
+    Gateway -->|Rate Limiter & Auth Protection| Auth[AuthController]
+    Gateway -->|Operations Control| Service[Customer/Collection Services]
+    Service -->|Atomic Transaction Management| DB[(MySQL 8.0 Database)]
+    Service -->|Offline Backup Sync| Sync[Sync Engine / IndexedDB]
+```
 
 ## 🐳 Quick Start: Docker Orchestration (Recommended)
 
