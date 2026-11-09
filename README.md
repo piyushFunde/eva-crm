@@ -1,15 +1,15 @@
-# 🛡️ EVA CRM — Enterprise Debt Collection Platform
+# EVA CRM — Enterprise Debt Collection Platform
 
 EVA CRM is a state-of-the-art, mobile-first Progressive Web Application (PWA) designed for field debt collection and automated customer management. Engineered with spring-loaded transactional integrity, real-time WebSocket synchronization, and high-performance offline processing capabilities, EVA CRM is built to support modern enterprise operational workflows with "Zero-Touch" field onboarding.
 
-🌐 **Live Website:** [https://crm.evagroups.in/](https://crm.evagroups.in/)
+**Live Website:** [https://crm.evagroups.in/](https://crm.evagroups.in/)
 
 ---
 ## System Architecture
 <img width="5041" height="6347" alt="diagram (2)" src="https://github.com/user-attachments/assets/bf1cc0c4-38c0-4159-9841-a744c7a9db97" />
 
 ---
-## ⚡ Key Highlights & Features
+## Key Highlights & Features
 
 1. **Zero-Touch Ingestion:** Excel uploaded customer sheets auto-register missing executive agents with default secure `ROLE_EXECUTIVE` logins.
 2. **Offline-First Synchronizer:** Complete IndexedDB integration via Dexie.js allows collectors to operate offline in cellar locations; offline transactions automatically sync when network coverage recovers.
@@ -22,7 +22,7 @@ EVA CRM is a state-of-the-art, mobile-first Progressive Web Application (PWA) de
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 * **Backend Framework:** Spring Boot 3.2.5 (Java 17)
 * **Database Layer:** MySQL 8.0
@@ -34,7 +34,7 @@ EVA CRM is a state-of-the-art, mobile-first Progressive Web Application (PWA) de
 
 ---
 
-## 📋 Environment Variables Configuration
+## Environment Variables Configuration
 
 To run the application, configure the following variables inside `.env` files:
 
@@ -69,7 +69,7 @@ graph TD
     Service -->|Offline Backup Sync| Sync[Sync Engine / IndexedDB]
 ```
 
-## 🐳 Quick Start: Docker Orchestration (Recommended)
+## Quick Start: Docker Orchestration (Recommended)
 
 Start the entire stack, including the MySQL database, Backend API server, and Frontend Client with Nginx in one command:
 
@@ -90,7 +90,7 @@ npm run docker:down
 
 ---
 
-## 🧑‍💻 Manual Local Development Setup
+## Manual Local Development Setup
 
 ### Backend (Spring Boot)
 1. Copy `backend/.env.example` to `backend/.env`.
@@ -128,7 +128,7 @@ All core API operations reside strictly under `/api/v1/`.
 
 ---
 
-## 📱 Mobile PWA Installation Instructions
+## Mobile PWA Installation Instructions
 
 Ensure you serve the site using **HTTPS** for mobile install prompts:
 
